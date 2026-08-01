@@ -2,56 +2,244 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ thống Quản lý Thí nghiệm</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Ghi Chú Thông Số Theo Pha A, B, C</title>
     <style>
-        body { background-color: #f8f9fa; }
-        .module-card { cursor: pointer; transition: 0.3s; }
-        .module-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 15px;
+            background-color: #f4f6f9;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        td.label {
+            font-weight: 500;
+            background-color: #f8f9fa;
+            text-align: left;
+            width: 40%;
+        }
+        th.pha-a { background-color: #d1ecf1; color: #0c5460; width: 20%; }
+        th.pha-b { background-color: #d4edda; color: #155724; width: 20%; }
+        th.pha-c { background-color: #fff3cd; color: #856404; width: 20%; }
+
+        input.note-input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+        input.note-input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        .btn-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+        }
+        .btn-save { background-color: #28a745; }
+        .btn-save:hover { background-color: #218838; }
+        
+        .btn-export { background-color: #17a2b8; }
+        .btn-export:hover { background-color: #138496; }
+
+        .btn-delete { background-color: #dc3545; }
+        .btn-delete:hover { background-color: #c82333; }
+
+        .status-msg {
+            font-style: italic;
+            color: #28a745;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <h2 class="text-center mb-4 text-primary">HỆ THỐNG QUẢN LÝ THÍ NGHIỆM THIẾT BỊ ĐIỆN</h2>
-        <div class="row g-4" id="menu-grid">
-            <!-- Các Module thiết bị -->
-            <script>
-                const modules = ['MC', 'DCL', 'TU', 'TI', 'MBA', 'KHANG', 'DAU', 'TUBU', 'CS', 'CAP'];
-                modules.forEach(mod => {
-                    document.write(`
-                        <div class="col-md-3">
-                            <div class="card module-card text-center p-4 h-100 border-primary" onclick="loadModule('${mod}')">
-                                <div class="card-body">
-                                    <h4 class="card-title text-uppercase text-primary">${mod}</h4>
-                                    <p class="card-text text-muted">Quản lý & Thí nghiệm thiết bị ${mod}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-                });
-            </script>
-        </div>
-        
-        <!-- Khu vực hiển thị nội dung Module được chọn -->
-        <div id="module-container" class="mt-5"></div>
-    </div>
 
-    <script>
-        function loadModule(modName) {
-            // Hiển thị khung chứa và thông báo đang tải
-            const container = document.getElementById('module-container');
-            container.innerHTML = `<div class="text-center"><div class="spinner-border text-primary" role="status"></div> Đang tải module ${modName}...</div>`;
-            
-            // Gọi Apps Script để load nội dung file HTML tương ứng (ví dụ mc.html, dcl.html...)
-            google.script.run
-                .withSuccessHandler(function(htmlContent) {
-                    container.innerHTML = htmlContent;
-                })
-                .withFailureHandler(function(err) {
-                    container.innerHTML = `<div class="alert alert-danger">Lỗi tải module: ${err.message}</div>`;
-                })
-                .includeHtmlModule(modName); // Hàm phụ trợ hoặc trả về trực tiếp tùy cách tổ chức template
+<div class="container">
+    <h2>Bảng Ghi Chú Thông Số Theo Pha (A, B, C)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nội dung / Hạng mục</th>
+                <th class="pha-a">Pha A</th>
+                <th class="pha-b">Pha B</th>
+                <th class="pha-c">Pha C</th>
+            </tr>
+        </thead>
+        <tbody id="noteTableBody">
+            <!-- Dữ liệu được tạo tự động bằng JavaScript -->
+        </tbody>
+    </table>
+    
+    <div class="btn-container">
+        <div>
+            <span id="statusMsg" class="status-msg"></span>
+        </div>
+        <div class="btn-group">
+            <button class="btn-save" onclick="manualSave()">Lưu dữ liệu</button>
+            <button class="btn-export" onclick="exportToCSV()">Xuất file Excel (CSV)</button>
+            <button class="btn-delete" onclick="clearData()">Xóa dữ liệu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const items = [
+        "Rcd sơ cấp 5000V",
+        "Rcd đkhiển 500V",
+        "Rcd C.Đóng 500V",
+        "Rcd C.Cắt 500V",
+        "R1c Đóng",
+        "R1c Cắt1",
+        "R1c Cắt2",
+        "R1c đc",
+        "I đc A",
+        "Tg đc",
+        "Rtx",
+        "C",
+        "O1",
+        "O2",
+        "CO",
+        "C_CO",
+        "SF6",
+        "SF6 cao",
+        "SF6 thấp"
+    ];
+
+    const phases = ['A', 'B', 'C'];
+    const tbody = document.getElementById("noteTableBody");
+
+    function renderTable() {
+        tbody.innerHTML = "";
+        const savedData = JSON.parse(localStorage.getItem("noteDataOnlyABC")) || {};
+
+        items.forEach((item, rowIndex) => {
+            let tr = document.createElement("tr");
+
+            // Cột tên hạng mục
+            let tdLabel = document.createElement("td");
+            tdLabel.className = "label";
+            tdLabel.innerText = item;
+            tr.appendChild(tdLabel);
+
+            // Duyệt qua 3 pha A, B, C
+            phases.forEach(phase => {
+                let tdInput = document.createElement("td");
+                let input = document.createElement("input");
+                input.type = "text"; // Nhập được cả số và chữ
+                input.className = "note-input";
+                
+                input.dataset.row = rowIndex;
+                input.dataset.phase = phase;
+
+                // Lấy dữ liệu đã lưu trước đó
+                if (savedData[rowIndex] && savedData[rowIndex][phase]) {
+                    input.value = savedData[rowIndex][phase];
+                }
+
+                tdInput.appendChild(input);
+                tr.appendChild(tdInput);
+            });
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Nút Lưu tường minh (chỉ lưu khi bấm)
+    function manualSave() {
+        let allInputs = document.querySelectorAll(".note-input");
+        let dataToSave = {};
+
+        allInputs.forEach(input => {
+            let r = input.dataset.row;
+            let p = input.dataset.phase;
+            let val = input.value;
+
+            if (!dataToSave[r]) dataToSave[r] = {};
+            dataToSave[r][p] = val;
+        });
+
+        localStorage.setItem("noteDataOnlyABC", JSON.stringify(dataToSave));
+        
+        let msg = document.getElementById("statusMsg");
+        msg.innerText = "Đã lưu thành công!";
+        setTimeout(() => { msg.innerText = ""; }, 2500);
+    }
+
+    // Xuất ra file CSV để mở bằng Excel
+    function exportToCSV() {
+        let csv = '\uFEFFNội dung,Pha A,Pha B,Pha C\n';
+        
+        items.forEach((item, rowIndex) => {
+            let rowData = [`"${item}"`];
+            phases.forEach(phase => {
+                let input = document.querySelector(`input[data-row='${rowIndex}'][data-phase='${phase}']`);
+                let val = input ? input.value.replace(/"/g, '""') : "";
+                rowData.push(`"${val}"`);
+            });
+            csv += rowData.join(",") + "\n";
+        });
+
+        let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Bang_Thong_So_Pha_ABC.csv";
+        link.click();
+    }
+
+    function clearData() {
+        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ ghi chú không?")) {
+            localStorage.removeItem("noteDataOnlyABC");
+            renderTable();
+            let msg = document.getElementById("statusMsg");
+            msg.innerText = "Đã xóa dữ liệu!";
+            setTimeout(() => { msg.innerText = ""; }, 2500);
         }
-    </script>
+    }
+
+    renderTable();
+</script>
+
 </body>
 </html>
