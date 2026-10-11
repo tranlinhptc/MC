@@ -30,7 +30,6 @@
   .chip { padding: 8px 4px; border-radius: 15px; border: 2px solid #ccc; background: #f4f4f4; color: #666; font-size: 11px; cursor: pointer; text-align: center; font-weight: normal; }
   .chip.selected { background: #007bff; color: #fff; border-color: #007bff; font-weight: bold; }
   .chip.driver { border-color: #fd7e14; }
-  .chip .del { color: #dc3545; font-size: 10px; margin-left: 2px; }
 
   table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 5px; }
   th, td { border: 1px solid #999; padding: 4px; text-align: center; }
@@ -51,7 +50,6 @@
   .hd-item { border: 1px solid #ccc; border-radius: 6px; margin-bottom: 8px; background: #fff; }
   .hd-header { padding: 8px; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
   .hd-header:hover { background: #e9ecef; }
-  .hd-header .badge { margin-right: 5px; }
   .hd-body { display: none; padding: 8px; border-top: 1px solid #eee; }
   .hd-body.open { display: block; }
 
@@ -65,6 +63,9 @@
   .summary-table .name-col { min-width: 100px; text-align: left; font-weight: bold; }
   .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .toolbar button { flex: 1; min-width: 100px; }
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin: 5px 0; }
+  .checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 12px; }
+  .checkbox-item input { width: auto; }
 </style>
 </head>
 <body>
@@ -93,18 +94,9 @@
 
     <div id="formTaoCT" style="display:none; border:1px solid #007bff; border-radius:8px; padding:10px; margin-bottom:10px; background:#f0f8ff;">
       <h3 style="margin-top:0;">Tạo công tác mới</h3>
-      <div class="form-group">
-        <label>Tên công tác:</label>
-        <input type="text" id="ctTen" placeholder="VD: Vĩnh Tân">
-      </div>
-      <div class="form-group">
-        <label>Từ ngày:</label>
-        <input type="date" id="ctTuNgay">
-      </div>
-      <div class="form-group">
-        <label>Đến ngày:</label>
-        <input type="date" id="ctDenNgay">
-      </div>
+      <div class="form-group"><label>Tên công tác:</label><input type="text" id="ctTen" placeholder="VD: Vĩnh Tân"></div>
+      <div class="form-group"><label>Từ ngày:</label><input type="date" id="ctTuNgay"></div>
+      <div class="form-group"><label>Đến ngày:</label><input type="date" id="ctDenNgay"></div>
       <div class="form-group">
         <label>Chọn người tham gia công tác:</label>
         <div class="chip-group" id="ctNguoiChips"></div>
@@ -122,9 +114,9 @@
   <div class="tab-content" id="tab1">
     <div class="form-group">
       <label>Chọn công tác cần tổng hợp:</label>
-      <select id="chonCTTongHop" onchange="renderBangTongHop()">
-        <option value="all">-- Tất cả công tác --</option>
-      </select>
+      <div class="checkbox-group" id="chonCTTongHop">
+        <label class="checkbox-item"><input type="checkbox" value="all" checked onchange="toggleAllCT(this)"> Tất cả</label>
+      </div>
     </div>
     <h3>Bảng tổng hợp Thu - Chi</h3>
     <div class="scroll-x" id="bangTongHop"></div>
@@ -147,11 +139,9 @@ const DS_NV_MAC_DINH = [
 const LAI_XE = ["Nguyễn Mạnh Hiệp", "Mai Văn Giáp"];
 
 // ========== STATE ==========
-let db = JSON.parse(localStorage.getItem('db_thuchi_v2') || '{"congTac":{},"nhanSu":[]}');
+let db = JSON.parse(localStorage.getItem('db_thuchi_v3') || '{"congTac":{},"nhanSu":[]}');
 if (!db.congTac) db.congTac = {};
 if (!db.nhanSu || db.nhanSu.length === 0) db.nhanSu = [...DS_NV_MAC_DINH];
-// db.nhanSu: danh sách nhân sự (có thể thêm/xóa vĩnh viễn)
-// db.congTac: { id: { ten, tuNgay, denNgay, nguoi: [ten...], hoatDong: [ { id, ngay, noiDung, loai, nguoi, soTien } ] } }
 
 let ctDangChon = null;
 let nguoiTam = [];
@@ -252,7 +242,6 @@ function hienThiChiTietCT() {
   </div>`;
   html += `<div class="folder-body open">`;
 
-  // Nút thêm hoạt động
   html += `<button class="btn-blue btn-sm" onclick="moFormHoatDong()">➕ Thêm hoạt động</button>`;
   html += `<div id="formHoatDong" style="display:none; border:1px solid #007bff; border-radius:6px; padding:8px; margin:8px 0; background:#f0f8ff;">
     <div class="form-group"><label>Ngày:</label><input type="date" id="hdNgay"></div>
@@ -269,7 +258,6 @@ function hienThiChiTietCT() {
     <button class="btn-gray btn-sm" onclick="document.getElementById('formHoatDong').style.display='none'">Hủy</button>
   </div>`;
 
-  // Danh sách hoạt động
   if (ctDangChon.hoatDong.length === 0) {
     html += '<p style="color:#999;">Chưa có hoạt động nào.</p>';
   } else {
@@ -280,30 +268,34 @@ function hienThiChiTietCT() {
       html += `<div class="hd-item">
         <div class="hd-header" onclick="toggleHD(this)">
           <span>${badge} ${formatDateDisplay(hd.ngay)} - ${hd.noiDung}</span>
-          <span><b>${formatMoney(tongHD)} đ</b> <span class="arrow">▶</span></span>
+          <span><b class="hd-tong" data-hdid="${hd.id}">${formatMoney(tongHD)} đ</b> <span class="arrow">▶</span></span>
         </div>
         <div class="hd-body">
           <div class="scroll-x">
             <table>
-              <thead><tr><th>STT</th><th>Tên</th><th>Số tiền</th></tr></thead>
+              <thead><tr><th>STT</th><th>Tên</th><th>Số tiền</th><th></th></tr></thead>
               <tbody>
                 ${hd.nguoi.map((ten, i) => `
                   <tr>
                     <td>${i+1}</td>
                     <td>${displayName(ten)}</td>
-                    <td><input type="number" class="money-input" value="${hd.soTien[ten] || 0}" onchange="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"></td>
+                    <td><input type="number" class="money-input" value="${hd.soTien[ten] || 0}" 
+                      oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"></td>
+                    <td><button class="btn-sm btn-red" onclick="xoaNguoiHD('${hd.id}','${ten.replace(/'/g,"\\'")}')">✖</button></td>
                   </tr>
                 `).join('')}
               </tbody>
-              <tfoot><tr style="background:#fff3cd; font-weight:bold;">
-                <td colspan="2" style="text-align:right;">TỔNG:</td>
-                <td>${formatMoney(tongHD)}</td>
-              </tr></tfoot>
             </table>
           </div>
           <div style="margin-top:5px;">
+            <button class="btn-sm btn-blue" onclick="moThemNguoiHD('${hd.id}')">➕ Thêm người</button>
             <button class="btn-sm btn-orange" onclick="copyTuNguoiDau('${hd.id}')">📋 Copy từ người đầu</button>
             <button class="btn-sm btn-red" onclick="xoaHoatDong('${hd.id}')">🗑️ Xóa hoạt động</button>
+          </div>
+          <div id="themNguoi_${hd.id}" style="display:none; margin-top:5px; border:1px dashed #007bff; padding:5px; border-radius:4px;">
+            <div class="chip-group" id="chipThem_${hd.id}"></div>
+            <button class="btn-sm btn-blue" onclick="xacNhanThemNguoi('${hd.id}')">Xác nhận thêm</button>
+            <button class="btn-sm btn-gray" onclick="document.getElementById('themNguoi_${hd.id}').style.display='none'">Hủy</button>
           </div>
         </div>
       </div>`;
@@ -366,17 +358,11 @@ function capNhatTien(hdId, ten, val) {
   if (!hd) return;
   hd.soTien[ten] = Number(val) || 0;
   luuLocal();
-  // Cập nhật tổng trong header
+  // Auto sum
   let tongHD = 0;
   hd.nguoi.forEach(n => { tongHD += (hd.soTien[n] || 0); });
-  const header = document.querySelector(`.hd-item .hd-header[onclick*="${hdId}"]`);
-  if (header) {
-    const span = header.querySelector('span:last-child b');
-    if (span) span.innerText = formatMoney(tongHD) + ' đ';
-  }
-  // Cập nhật dòng tổng trong bảng
-  const tfoot = document.querySelector(`.hd-item .hd-body table tfoot td:last-child`);
-  if (tfoot) tfoot.innerText = formatMoney(tongHD);
+  const el = document.querySelector(`.hd-tong[data-hdid="${hdId}"]`);
+  if (el) el.innerText = formatMoney(tongHD) + ' đ';
 }
 
 function copyTuNguoiDau(hdId) {
@@ -391,6 +377,49 @@ function copyTuNguoiDau(hdId) {
   alert(`✅ Đã copy ${formatMoney(tien)}đ từ ${displayName(nguoiDau)} cho ${hd.nguoi.length - 1} người khác.`);
 }
 
+function xoaNguoiHD(hdId, ten) {
+  if (!ctDangChon) return;
+  const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
+  if (!hd) return;
+  if (!confirm(`Xóa ${displayName(ten)} khỏi hoạt động này?`)) return;
+  hd.nguoi = hd.nguoi.filter(n => n !== ten);
+  delete hd.soTien[ten];
+  luuLocal();
+  hienThiChiTietCT();
+}
+
+function moThemNguoiHD(hdId) {
+  const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
+  if (!hd) return;
+  const div = document.getElementById('themNguoi_' + hdId);
+  div.style.display = 'block';
+  // Những người trong CT nhưng chưa có trong hoạt động
+  const conLai = ctDangChon.nguoi.filter(n => !hd.nguoi.includes(n));
+  const chipDiv = document.getElementById('chipThem_' + hdId);
+  if (conLai.length === 0) {
+    chipDiv.innerHTML = '<p style="color:#999; font-size:12px;">Tất cả mọi người đã có trong hoạt động.</p>';
+  } else {
+    chipDiv.innerHTML = conLai.map(nv => 
+      `<div class="chip" data-name="${nv}" onclick="this.classList.toggle('selected')">${displayName(nv)}</div>`
+    ).join('');
+  }
+}
+
+function xacNhanThemNguoi(hdId) {
+  const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
+  if (!hd) return;
+  const chips = document.querySelectorAll(`#chipThem_${hdId} .chip.selected`);
+  chips.forEach(c => {
+    const ten = c.getAttribute('data-name');
+    if (!hd.nguoi.includes(ten)) {
+      hd.nguoi.push(ten);
+      hd.soTien[ten] = 0;
+    }
+  });
+  luuLocal();
+  hienThiChiTietCT();
+}
+
 function xoaHoatDong(hdId) {
   if (!ctDangChon) return;
   if (!confirm("Xóa hoạt động này?")) return;
@@ -401,118 +430,171 @@ function xoaHoatDong(hdId) {
 
 // ========== TAB TỔNG HỢP ==========
 function renderChonCTTongHop() {
-  const sel = document.getElementById('chonCTTongHop');
-  const val = sel.value;
-  sel.innerHTML = '<option value="all">-- Tất cả công tác --</option>' +
-    Object.values(db.congTac).map(ct => `<option value="${ct.id}">${ct.ten}</option>`).join('');
-  sel.value = val || 'all';
+  const container = document.getElementById('chonCTTongHop');
+  const list = Object.values(db.congTac);
+  container.innerHTML = '<label class="checkbox-item"><input type="checkbox" value="all" checked onchange="toggleAllCT(this)"> Tất cả</label>' +
+    list.map(ct => `<label class="checkbox-item"><input type="checkbox" value="${ct.id}" checked onchange="renderBangTongHop()"> ${ct.ten}</label>`).join('');
+}
+
+function toggleAllCT(el) {
+  const checked = el.checked;
+  document.querySelectorAll('#chonCTTongHop input[type="checkbox"]').forEach(cb => {
+    if (cb.value !== 'all') cb.checked = checked;
+  });
+  renderBangTongHop();
+}
+
+function getSelectedCT() {
+  const allCb = document.querySelector('#chonCTTongHop input[value="all"]');
+  if (allCb && allCb.checked) return Object.values(db.congTac);
+  const checked = [...document.querySelectorAll('#chonCTTongHop input[type="checkbox"]:checked')]
+    .filter(cb => cb.value !== 'all')
+    .map(cb => db.congTac[cb.value])
+    .filter(Boolean);
+  return checked;
 }
 
 function renderBangTongHop() {
   const container = document.getElementById('bangTongHop');
-  const ctFilter = document.getElementById('chonCTTongHop').value;
+  const dsCT = getSelectedCT();
+  if (dsCT.length === 0) { container.innerHTML = '<p style="color:#999;">Chưa chọn công tác nào.</p>'; return; }
 
-  // Gom người
-  const tatCaNguoi = new Set();
-  Object.values(db.congTac).forEach(ct => {
-    if (ctFilter === 'all' || ctFilter === ct.id) {
-      ct.nguoi.forEach(n => tatCaNguoi.add(n));
-    }
+  // Gom tất cả người và hoạt động
+  const dsNguoi = new Set();
+  const dsHoatDong = [];
+  dsCT.forEach(ct => {
+    ct.nguoi.forEach(n => dsNguoi.add(n));
+    ct.hoatDong.forEach(hd => dsHoatDong.push({ ...hd, ctTen: ct.ten }));
   });
-  const dsNguoi = [...tatCaNguoi];
+  const dsNguoiArr = [...dsNguoi];
+  if (dsHoatDong.length === 0) { container.innerHTML = '<p style="color:#999;">Chưa có hoạt động.</p>'; return; }
 
-  if (dsNguoi.length === 0) { container.innerHTML = '<p style="color:#999;">Chưa có dữ liệu.</p>'; return; }
-
-  // Tính tổng thu, tổng chi cho từng người
-  const tongThu = {}, tongChi = {};
-  dsNguoi.forEach(n => { tongThu[n] = 0; tongChi[n] = 0; });
-
-  Object.values(db.congTac).forEach(ct => {
-    if (ctFilter !== 'all' && ctFilter !== ct.id) return;
-    ct.hoatDong.forEach(hd => {
-      hd.nguoi.forEach(n => {
-        if (!dsNguoi.includes(n)) return;
-        const val = hd.soTien[n] || 0;
-        if (hd.loai === 'thu') tongThu[n] += val;
-        else tongChi[n] += val;
-      });
-    });
-  });
+  // Sắp xếp hoạt động theo ngày
+  dsHoatDong.sort((a, b) => (a.ngay || '').localeCompare(b.ngay || ''));
 
   let html = '<table class="summary-table"><thead><tr>';
-  html += '<th>STT</th><th class="name-col">Họ và Tên</th><th>Tổng Thu</th><th>Tổng Chi</th><th>Còn lại</th>';
-  html += '</tr></thead><tbody>';
+  html += '<th>STT</th><th class="name-col">Công tác</th><th>Ngày</th><th>Nội dung</th><th>Loại</th>';
+  dsNguoiArr.forEach(n => html += `<th>${displayName(n)}</th>`);
+  html += '<th>Tổng</th></tr></thead><tbody>';
 
-  let tongThuAll = 0, tongChiAll = 0;
-  dsNguoi.forEach((n, i) => {
-    const conLai = tongThu[n] - tongChi[n];
-    tongThuAll += tongThu[n];
-    tongChiAll += tongChi[n];
-    const cls = conLai >= 0 ? 'thu' : 'chi';
-    html += `<tr>
-      <td>${i+1}</td>
-      <td class="name-col">${displayName(n)}</td>
-      <td class="thu">${formatMoney(tongThu[n])}</td>
-      <td class="chi">${formatMoney(tongChi[n])}</td>
-      <td class="${cls}" style="font-weight:bold;">${formatMoney(conLai)}</td>
-    </tr>`;
+  dsHoatDong.forEach((hd, idx) => {
+    const badge = hd.loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>';
+    let tong = 0;
+    html += `<tr><td>${idx+1}</td><td class="name-col">${hd.ctTen}</td><td>${formatDateDisplay(hd.ngay)}</td><td>${hd.noiDung}</td><td>${badge}</td>`;
+    dsNguoiArr.forEach(n => {
+      const val = hd.soTien[n] || 0;
+      if (val > 0) tong += val;
+      const cls = val > 0 ? (hd.loai === 'thu' ? 'thu' : 'chi') : '';
+      html += `<td class="${cls}">${val > 0 ? formatMoney(val) : ''}</td>`;
+    });
+    html += `<td style="font-weight:bold;">${formatMoney(tong)}</td></tr>`;
   });
 
-  html += `<tr style="background:#fff3cd; font-weight:bold;">
-    <td colspan="2" style="text-align:right;">TỔNG CỘNG:</td>
-    <td class="thu">${formatMoney(tongThuAll)}</td>
-    <td class="chi">${formatMoney(tongChiAll)}</td>
-    <td>${formatMoney(tongThuAll - tongChiAll)}</td>
-  </tr>`;
+  // Dòng tổng cuối: Tổng Thu - Tổng Chi = Còn lại
+  html += '<tr style="background:#fff3cd; font-weight:bold;"><td colspan="5" style="text-align:right;">TỔNG THU:</td>';
+  dsNguoiArr.forEach(n => {
+    let t = 0;
+    dsHoatDong.forEach(hd => { if (hd.loai === 'thu' && hd.soTien[n]) t += hd.soTien[n]; });
+    html += `<td class="thu">${formatMoney(t)}</td>`;
+  });
+  html += '<td></td></tr>';
+
+  html += '<tr style="background:#fff3cd; font-weight:bold;"><td colspan="5" style="text-align:right;">TỔNG CHI:</td>';
+  dsNguoiArr.forEach(n => {
+    let t = 0;
+    dsHoatDong.forEach(hd => { if (hd.loai === 'chi' && hd.soTien[n]) t += hd.soTien[n]; });
+    html += `<td class="chi">${formatMoney(t)}</td>`;
+  });
+  html += '<td></td></tr>';
+
+  html += '<tr style="background:#d4edda; font-weight:bold;"><td colspan="5" style="text-align:right;">CÒN LẠI:</td>';
+  let tongConLai = 0;
+  dsNguoiArr.forEach(n => {
+    let thu = 0, chi = 0;
+    dsHoatDong.forEach(hd => {
+      if (!hd.soTien[n]) return;
+      if (hd.loai === 'thu') thu += hd.soTien[n];
+      else chi += hd.soTien[n];
+    });
+    const conLai = thu - chi;
+    tongConLai += conLai;
+    html += `<td style="color:${conLai >= 0 ? '#28a745' : '#dc3545'};">${formatMoney(conLai)}</td>`;
+  });
+  html += `<td>${formatMoney(tongConLai)}</td></tr>`;
+
   html += '</tbody></table>';
   container.innerHTML = html;
 }
 
 // ========== XUẤT EXCEL ==========
 function xuatExcel() {
-  const ctFilter = document.getElementById('chonCTTongHop').value;
-  const tatCaNguoi = new Set();
-  Object.values(db.congTac).forEach(ct => {
-    if (ctFilter === 'all' || ctFilter === ct.id) {
-      ct.nguoi.forEach(n => tatCaNguoi.add(n));
-    }
+  const dsCT = getSelectedCT();
+  const dsNguoi = new Set();
+  const dsHoatDong = [];
+  dsCT.forEach(ct => {
+    ct.nguoi.forEach(n => dsNguoi.add(n));
+    ct.hoatDong.forEach(hd => dsHoatDong.push({ ...hd, ctTen: ct.ten }));
   });
-  const dsNguoi = [...tatCaNguoi];
+  const dsNguoiArr = [...dsNguoi];
+  dsHoatDong.sort((a, b) => (a.ngay || '').localeCompare(b.ngay || ''));
 
-  const tongThu = {}, tongChi = {};
-  dsNguoi.forEach(n => { tongThu[n] = 0; tongChi[n] = 0; });
-
-  Object.values(db.congTac).forEach(ct => {
-    if (ctFilter !== 'all' && ctFilter !== ct.id) return;
-    ct.hoatDong.forEach(hd => {
-      hd.nguoi.forEach(n => {
-        if (!dsNguoi.includes(n)) return;
-        const val = hd.soTien[n] || 0;
-        if (hd.loai === 'thu') tongThu[n] += val;
-        else tongChi[n] += val;
-      });
-    });
-  });
-
-  const header = ['STT', 'Họ và Tên', 'Tổng Thu', 'Tổng Chi', 'Còn lại'];
+  const header = ['STT', 'Công tác', 'Ngày', 'Nội dung', 'Loại', ...dsNguoiArr.map(displayName), 'Tổng'];
   const rows = [header];
-  let ttAll = 0, tcAll = 0;
-  dsNguoi.forEach((n, i) => {
-    const conLai = tongThu[n] - tongChi[n];
-    ttAll += tongThu[n]; tcAll += tongChi[n];
-    rows.push([i+1, displayName(n), tongThu[n], tongChi[n], conLai]);
+  dsHoatDong.forEach((hd, idx) => {
+    let tong = 0;
+    const row = [idx+1, hd.ctTen, formatDateDisplay(hd.ngay), hd.noiDung, hd.loai === 'thu' ? 'THU' : 'CHI'];
+    dsNguoiArr.forEach(n => {
+      const val = hd.soTien[n] || 0;
+      if (val > 0) tong += val;
+      row.push(val || '');
+    });
+    row.push(tong);
+    rows.push(row);
   });
-  rows.push(['', 'TỔNG CỘNG', ttAll, tcAll, ttAll - tcAll]);
+
+  // Tổng Thu
+  const rowThu = ['', '', '', '', 'TỔNG THU'];
+  dsNguoiArr.forEach(n => {
+    let t = 0;
+    dsHoatDong.forEach(hd => { if (hd.loai === 'thu' && hd.soTien[n]) t += hd.soTien[n]; });
+    rowThu.push(t);
+  });
+  rowThu.push('');
+  rows.push(rowThu);
+
+  // Tổng Chi
+  const rowChi = ['', '', '', '', 'TỔNG CHI'];
+  dsNguoiArr.forEach(n => {
+    let t = 0;
+    dsHoatDong.forEach(hd => { if (hd.loai === 'chi' && hd.soTien[n]) t += hd.soTien[n]; });
+    rowChi.push(t);
+  });
+  rowChi.push('');
+  rows.push(rowChi);
+
+  // Còn lại
+  const rowConLai = ['', '', '', '', 'CÒN LẠI'];
+  dsNguoiArr.forEach(n => {
+    let thu = 0, chi = 0;
+    dsHoatDong.forEach(hd => {
+      if (!hd.soTien[n]) return;
+      if (hd.loai === 'thu') thu += hd.soTien[n];
+      else chi += hd.soTien[n];
+    });
+    rowConLai.push(thu - chi);
+  });
+  rowConLai.push('');
+  rows.push(rowConLai);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'TongHop');
-  XLSX.writeFile(wb, `TongHopThuChi_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, 'ThuChi');
+  XLSX.writeFile(wb, `ThuChiCongTac_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // ========== LƯU / TẢI ==========
 function luuLocal() {
-  localStorage.setItem('db_thuchi_v2', JSON.stringify(db));
+  localStorage.setItem('db_thuchi_v3', JSON.stringify(db));
 }
 
 async function luuDuLieu() {
@@ -540,7 +622,6 @@ async function taiDuLieu() {
         db = loaded;
         if (!db.nhanSu || db.nhanSu.length === 0) db.nhanSu = [...DS_NV_MAC_DINH];
       } else {
-        // Tương thích code cũ
         db = { congTac: loaded, nhanSu: [...DS_NV_MAC_DINH] };
       }
       luuLocal();
