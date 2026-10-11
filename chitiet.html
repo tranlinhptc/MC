@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản Lý Thu Chi Công Tác</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
 <style>
   * { box-sizing: border-box; font-family: Arial, sans-serif; }
   body { background: #f0f2f5; margin: 0; padding: 10px; }
@@ -50,6 +54,8 @@
   .hd-item { border: 1px solid #ccc; border-radius: 6px; margin-bottom: 8px; background: #fff; }
   .hd-header { padding: 8px; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
   .hd-header:hover { background: #e9ecef; }
+  .hd-header.open .arrow { transform: rotate(90deg); }
+  .hd-header .arrow { transition: transform 0.2s; }
   .hd-body { display: none; padding: 8px; border-top: 1px solid #eee; }
   .hd-body.open { display: block; }
 
@@ -95,8 +101,10 @@
     <div id="formTaoCT" style="display:none; border:1px solid #007bff; border-radius:8px; padding:10px; margin-bottom:10px; background:#f0f8ff;">
       <h3 style="margin-top:0;">Tạo công tác mới</h3>
       <div class="form-group"><label>Tên công tác:</label><input type="text" id="ctTen" placeholder="VD: Vĩnh Tân"></div>
-      <div class="form-group"><label>Từ ngày:</label><input type="date" id="ctTuNgay"></div>
-      <div class="form-group"><label>Đến ngày:</label><input type="date" id="ctDenNgay"></div>
+      <div class="form-group">
+        <label>Thời gian công tác (chọn 1 lần):</label>
+        <input type="text" id="ctThoiGian" placeholder="Bấm để chọn ngày bắt đầu - kết thúc">
+      </div>
       <div class="form-group">
         <label>Chọn người tham gia công tác:</label>
         <div class="chip-group" id="ctNguoiChips"></div>
@@ -139,13 +147,14 @@ const DS_NV_MAC_DINH = [
 const LAI_XE = ["Nguyễn Mạnh Hiệp", "Mai Văn Giáp"];
 
 // ========== STATE ==========
-let db = JSON.parse(localStorage.getItem('db_thuchi_v3') || '{"congTac":{},"nhanSu":[]}');
+let db = JSON.parse(localStorage.getItem('db_thuchi_v4') || '{"congTac":{},"nhanSu":[]}');
 if (!db.congTac) db.congTac = {};
 if (!db.nhanSu || db.nhanSu.length === 0) db.nhanSu = [...DS_NV_MAC_DINH];
 
 let ctDangChon = null;
 let nguoiTam = [];
 let hdNguoiTam = [];
+let openHDs = new Set(); // Lưu id các hoạt động đang mở
 
 // ========== HELPERS ==========
 function getShortName(full) {
@@ -163,8 +172,17 @@ function formatMoney(n) { return n ? n.toLocaleString('vi-VN') : '0'; }
 function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
 function formatDateDisplay(iso) {
   if (!iso) return '';
+  if (!iso.includes('-')) return iso;
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
+}
+function chuyenNgay(str) {
+  // "dd/mm/yyyy" -> "yyyy-mm-dd"
+  if (!str) return '';
+  if (str.includes('-') && str.split('-')[0].length === 4) return str;
+  const parts = str.split('/');
+  if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  return str;
 }
 
 // ========== TAB ==========
@@ -182,6 +200,18 @@ function moFormTaoCT() {
   document.getElementById('formTaoCT').style.display = 'block';
   nguoiTam = [];
   renderChipsCT();
+  if (!window._fpCT) {
+    window._fpCT = flatpickr("#ctThoiGian", {
+      mode: "range",
+      dateFormat: "d/m/Y",
+      locale: "vn",
+      onChange: function(selectedDates, dateStr) {
+        if (dateStr.includes(" to ")) {
+          document.getElementById('ctThoiGian').value = dateStr.replace(" to ", " - ");
+        }
+      }
+    });
+  }
 }
 function renderChipsCT() {
   const container = document.getElementById('ctNguoiChips');
@@ -201,21 +231,29 @@ function boChonTatCa() { nguoiTam = []; renderChipsCT(); }
 
 function taoCongTac() {
   const ten = document.getElementById('ctTen').value.trim();
-  const tuNgay = document.getElementById('ctTuNgay').value;
-  const denNgay = document.getElementById('ctDenNgay').value;
+  const thoiGian = document.getElementById('ctThoiGian').value.trim();
   if (!ten) { alert("Nhập tên công tác!"); return; }
-  if (!tuNgay) { alert("Chọn từ ngày!"); return; }
+  if (!thoiGian) { alert("Chọn thời gian công tác!"); return; }
+  let tuNgay = '', denNgay = '';
+  const parts = thoiGian.split(' - ');
+  if (parts.length === 2) {
+    tuNgay = chuyenNgay(parts[0].trim());
+    denNgay = chuyenNgay(parts[1].trim());
+  } else {
+    tuNgay = chuyenNgay(thoiGian.trim());
+    denNgay = tuNgay;
+  }
   if (nguoiTam.length === 0) { alert("Chọn ít nhất 1 người!"); return; }
   const id = genId();
-  db.congTac[id] = { id, ten, tuNgay, denNgay: denNgay || tuNgay, nguoi: [...nguoiTam], hoatDong: [] };
+  db.congTac[id] = { id, ten, tuNgay, denNgay, nguoi: [...nguoiTam], hoatDong: [] };
   luuLocal();
   document.getElementById('ctTen').value = '';
-  document.getElementById('ctTuNgay').value = '';
-  document.getElementById('ctDenNgay').value = '';
+  if (window._fpCT) window._fpCT.clear();
   nguoiTam = [];
   document.getElementById('formTaoCT').style.display = 'none';
   renderChonCT();
   document.getElementById('chonCT').value = id;
+  openHDs = new Set();
   hienThiChiTietCT();
   alert("✅ Đã tạo công tác: " + ten);
 }
@@ -231,7 +269,10 @@ function renderChonCT() {
 // ========== CHI TIẾT CÔNG TÁC ==========
 function hienThiChiTietCT() {
   const id = document.getElementById('chonCT').value;
+  const oldId = ctDangChon ? ctDangChon.id : null;
   ctDangChon = id ? db.congTac[id] : null;
+  if (oldId !== id) openHDs = new Set();
+
   const container = document.getElementById('chiTietCT');
   if (!ctDangChon) { container.innerHTML = ''; return; }
 
@@ -265,12 +306,13 @@ function hienThiChiTietCT() {
       const badge = hd.loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>';
       let tongHD = 0;
       hd.nguoi.forEach(n => { tongHD += (hd.soTien[n] || 0); });
+      const isOpen = openHDs.has(hd.id);
       html += `<div class="hd-item">
-        <div class="hd-header" onclick="toggleHD(this)">
+        <div class="hd-header ${isOpen ? 'open' : ''}" onclick="toggleHD(this, '${hd.id}')">
           <span>${badge} ${formatDateDisplay(hd.ngay)} - ${hd.noiDung}</span>
           <span><b class="hd-tong" data-hdid="${hd.id}">${formatMoney(tongHD)} đ</b> <span class="arrow">▶</span></span>
         </div>
-        <div class="hd-body">
+        <div class="hd-body ${isOpen ? 'open' : ''}">
           <div class="scroll-x">
             <table>
               <thead><tr><th>STT</th><th>Tên</th><th>Số tiền</th><th></th></tr></thead>
@@ -310,8 +352,11 @@ function toggleFolder(el) {
   el.classList.toggle('open');
   el.nextElementSibling.classList.toggle('open');
 }
-function toggleHD(el) {
+function toggleHD(el, hdId) {
+  el.classList.toggle('open');
   el.nextElementSibling.classList.toggle('open');
+  if (el.classList.contains('open')) openHDs.add(hdId);
+  else openHDs.delete(hdId);
 }
 
 function moFormHoatDong() {
@@ -346,8 +391,10 @@ function themHoatDong() {
   if (hdNguoiTam.length === 0) { alert("Chọn ít nhất 1 người!"); return; }
   const soTien = {};
   hdNguoiTam.forEach(n => soTien[n] = 0);
-  ctDangChon.hoatDong.push({ id: genId(), ngay, noiDung, loai, nguoi: [...hdNguoiTam], soTien });
+  const newId = genId();
+  ctDangChon.hoatDong.push({ id: newId, ngay, noiDung, loai, nguoi: [...hdNguoiTam], soTien });
   hdNguoiTam = [];
+  openHDs.add(newId);
   luuLocal();
   hienThiChiTietCT();
 }
@@ -358,7 +405,6 @@ function capNhatTien(hdId, ten, val) {
   if (!hd) return;
   hd.soTien[ten] = Number(val) || 0;
   luuLocal();
-  // Auto sum
   let tongHD = 0;
   hd.nguoi.forEach(n => { tongHD += (hd.soTien[n] || 0); });
   const el = document.querySelector(`.hd-tong[data-hdid="${hdId}"]`);
@@ -373,6 +419,7 @@ function copyTuNguoiDau(hdId) {
   const tien = hd.soTien[nguoiDau] || 0;
   hd.nguoi.forEach(n => hd.soTien[n] = tien);
   luuLocal();
+  openHDs.add(hdId);
   hienThiChiTietCT();
   alert(`✅ Đã copy ${formatMoney(tien)}đ từ ${displayName(nguoiDau)} cho ${hd.nguoi.length - 1} người khác.`);
 }
@@ -385,6 +432,7 @@ function xoaNguoiHD(hdId, ten) {
   hd.nguoi = hd.nguoi.filter(n => n !== ten);
   delete hd.soTien[ten];
   luuLocal();
+  openHDs.add(hdId);
   hienThiChiTietCT();
 }
 
@@ -393,7 +441,6 @@ function moThemNguoiHD(hdId) {
   if (!hd) return;
   const div = document.getElementById('themNguoi_' + hdId);
   div.style.display = 'block';
-  // Những người trong CT nhưng chưa có trong hoạt động
   const conLai = ctDangChon.nguoi.filter(n => !hd.nguoi.includes(n));
   const chipDiv = document.getElementById('chipThem_' + hdId);
   if (conLai.length === 0) {
@@ -417,6 +464,7 @@ function xacNhanThemNguoi(hdId) {
     }
   });
   luuLocal();
+  openHDs.add(hdId);
   hienThiChiTietCT();
 }
 
@@ -424,6 +472,7 @@ function xoaHoatDong(hdId) {
   if (!ctDangChon) return;
   if (!confirm("Xóa hoạt động này?")) return;
   ctDangChon.hoatDong = ctDangChon.hoatDong.filter(h => h.id !== hdId);
+  openHDs.delete(hdId);
   luuLocal();
   hienThiChiTietCT();
 }
@@ -447,11 +496,10 @@ function toggleAllCT(el) {
 function getSelectedCT() {
   const allCb = document.querySelector('#chonCTTongHop input[value="all"]');
   if (allCb && allCb.checked) return Object.values(db.congTac);
-  const checked = [...document.querySelectorAll('#chonCTTongHop input[type="checkbox"]:checked')]
+  return [...document.querySelectorAll('#chonCTTongHop input[type="checkbox"]:checked')]
     .filter(cb => cb.value !== 'all')
     .map(cb => db.congTac[cb.value])
     .filter(Boolean);
-  return checked;
 }
 
 function renderBangTongHop() {
@@ -459,7 +507,6 @@ function renderBangTongHop() {
   const dsCT = getSelectedCT();
   if (dsCT.length === 0) { container.innerHTML = '<p style="color:#999;">Chưa chọn công tác nào.</p>'; return; }
 
-  // Gom tất cả người và hoạt động
   const dsNguoi = new Set();
   const dsHoatDong = [];
   dsCT.forEach(ct => {
@@ -468,8 +515,6 @@ function renderBangTongHop() {
   });
   const dsNguoiArr = [...dsNguoi];
   if (dsHoatDong.length === 0) { container.innerHTML = '<p style="color:#999;">Chưa có hoạt động.</p>'; return; }
-
-  // Sắp xếp hoạt động theo ngày
   dsHoatDong.sort((a, b) => (a.ngay || '').localeCompare(b.ngay || ''));
 
   let html = '<table class="summary-table"><thead><tr>';
@@ -490,7 +535,6 @@ function renderBangTongHop() {
     html += `<td style="font-weight:bold;">${formatMoney(tong)}</td></tr>`;
   });
 
-  // Dòng tổng cuối: Tổng Thu - Tổng Chi = Còn lại
   html += '<tr style="background:#fff3cd; font-weight:bold;"><td colspan="5" style="text-align:right;">TỔNG THU:</td>';
   dsNguoiArr.forEach(n => {
     let t = 0;
@@ -552,7 +596,6 @@ function xuatExcel() {
     rows.push(row);
   });
 
-  // Tổng Thu
   const rowThu = ['', '', '', '', 'TỔNG THU'];
   dsNguoiArr.forEach(n => {
     let t = 0;
@@ -562,7 +605,6 @@ function xuatExcel() {
   rowThu.push('');
   rows.push(rowThu);
 
-  // Tổng Chi
   const rowChi = ['', '', '', '', 'TỔNG CHI'];
   dsNguoiArr.forEach(n => {
     let t = 0;
@@ -572,7 +614,6 @@ function xuatExcel() {
   rowChi.push('');
   rows.push(rowChi);
 
-  // Còn lại
   const rowConLai = ['', '', '', '', 'CÒN LẠI'];
   dsNguoiArr.forEach(n => {
     let thu = 0, chi = 0;
@@ -594,7 +635,7 @@ function xuatExcel() {
 
 // ========== LƯU / TẢI ==========
 function luuLocal() {
-  localStorage.setItem('db_thuchi_v3', JSON.stringify(db));
+  localStorage.setItem('db_thuchi_v4', JSON.stringify(db));
 }
 
 async function luuDuLieu() {
@@ -625,6 +666,7 @@ async function taiDuLieu() {
         db = { congTac: loaded, nhanSu: [...DS_NV_MAC_DINH] };
       }
       luuLocal();
+      openHDs = new Set();
       renderChonCT();
       hienThiChiTietCT();
       alert("✅ Đã tải dữ liệu!");
