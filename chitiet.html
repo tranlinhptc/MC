@@ -557,7 +557,7 @@ function xoaNguoiHD(hdId, ten) {
   luuLocal();
   openHDs.add(hdId);
   hienThiChiTietCT();
-  autoSave();
+  //autoSave();
 }
 
 function moThemNguoiHD(hdId) {
@@ -600,7 +600,7 @@ function xoaHoatDong(hdId) {
   openHDs.delete(hdId);
   luuLocal();
   hienThiChiTietCT();
-  autoSave();
+  //autoSave();
 }
 
 function xoaCongTac(id) {
@@ -611,7 +611,7 @@ function xoaCongTac(id) {
   renderLocThang();
   renderChonCT();
   document.getElementById('chiTietCT').innerHTML = '';
-  autoSave();
+  //autoSave();
   alert("✅ Đã xóa công tác!");
 }
 
