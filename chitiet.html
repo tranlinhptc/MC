@@ -141,8 +141,8 @@ const DS_NV_MAC_DINH = [
   "Nguyễn Hữu Kính","Hoàng Trần Quản Trọng","Ngô Văn Quang","Trần Văn Hoàng",
   "Kim Văn Quỳnh","Hồ Văn Huy","Lê Hữu Anh","Trần Phúc Linh","Tạ Quốc Đạt",
   "Võ Ngọc Sơn","Nguyễn Xuân Khánh","Đoàn Hoàng Quang Định","Võ Văn Sỹ",
-  "Lưu Đức Minh","Nguyễn Mạnh Hiệp","Mai Văn Giáp","Nguyễn Hữu Đạt",
-  "Nguyễn Mạnh Hòa","Bùi Thị Thái", "Nguyễn Thị Thanh Hương"," Bùi Thị Thảo"
+  "Lưu Đức Minh","Nguyễn Mạnh Hiệp","Mai Văn Giáp","Nguyễn Thị Thanh Hương","Nguyễn Hữu Đạt",
+  "Nguyễn Mạnh Hòa","Bùi Thị Thái"
 ];
 const LAI_XE = ["Nguyễn Mạnh Hiệp", "Mai Văn Giáp"];
 
@@ -402,7 +402,7 @@ function capNhatTien(hdId, ten, val) {
   if (!ctDangChon) return;
   const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
   if (!hd) return;
-  hd.soTien[ten] = Number(val) || ;
+  hd.soTien[ten] = Number(val) || 0;
   luuLocal();
   let tongHD = 0;
   hd.nguoi.forEach(n => { tongHD += (hd.soTien[n] || 0); });
@@ -414,8 +414,8 @@ function copyTuNguoiDau(hdId) {
   if (!ctDangChon) return;
   const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
   if (!hd || hd.nguoi.length === 0) return;
-  const nguoiDau = hd.nguoi[];
-  const tien = hd.soTien[nguoiDau] ||  ;
+  const nguoiDau = hd.nguoi[0];
+  const tien = hd.soTien[nguoiDau] || 0;
   hd.nguoi.forEach(n => hd.soTien[n] = tien);
   luuLocal();
   openHDs.add(hdId);
