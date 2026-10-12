@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Công Tác</title>
+<title>Quản Lý Thu Chi Công Tác</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
@@ -76,7 +76,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>📋 NOTE</h1>
+  <h1>📋 QUẢN LÝ THU CHI CÔNG TÁC</h1>
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab(0)">💰 Thu/Chi</button>
@@ -141,20 +141,20 @@ const DS_NV_MAC_DINH = [
   "Nguyễn Hữu Kính","Hoàng Trần Quản Trọng","Ngô Văn Quang","Trần Văn Hoàng",
   "Kim Văn Quỳnh","Hồ Văn Huy","Lê Hữu Anh","Trần Phúc Linh","Tạ Quốc Đạt",
   "Võ Ngọc Sơn","Nguyễn Xuân Khánh","Đoàn Hoàng Quang Định","Võ Văn Sỹ",
-  "Lưu Đức Minh","Nguyễn Mạnh Hiệp","Mai Văn Giáp","Nguyễn Thị Thanh Hương","Nguyễn Hữu Đạt",
-  "Nguyễn Mạnh Hòa","Bùi Thị Thái"
+  "Lưu Đức Minh","Nguyễn Mạnh Hiệp","Mai Văn Giáp","Nguyễn Hữu Đạt",
+  "Nguyễn Mạnh Hòa","Bùi Thị Thái", "Nguyễn Thị Thanh Hương"," Bùi Thị Thảo"
 ];
 const LAI_XE = ["Nguyễn Mạnh Hiệp", "Mai Văn Giáp"];
 
 // ========== STATE ==========
-let db = JSON.parse(localStorage.getItem('db_thuchi_v4') || '{"congTac":{},"nhanSu":[]}');
+let db = JSON.parse(localStorage.getItem('db_thuchi_v5') || '{"congTac":{},"nhanSu":[]}');
 if (!db.congTac) db.congTac = {};
 if (!db.nhanSu || db.nhanSu.length === 0) db.nhanSu = [...DS_NV_MAC_DINH];
 
 let ctDangChon = null;
 let nguoiTam = [];
 let hdNguoiTam = [];
-let openHDs = new Set(); // Lưu id các hoạt động đang mở
+let openHDs = new Set();
 
 // ========== HELPERS ==========
 function getShortName(full) {
@@ -177,7 +177,6 @@ function formatDateDisplay(iso) {
   return `${d}/${m}/${y}`;
 }
 function chuyenNgay(str) {
-  // "dd/mm/yyyy" -> "yyyy-mm-dd"
   if (!str) return '';
   if (str.includes('-') && str.split('-')[0].length === 4) return str;
   const parts = str.split('/');
@@ -403,7 +402,7 @@ function capNhatTien(hdId, ten, val) {
   if (!ctDangChon) return;
   const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
   if (!hd) return;
-  hd.soTien[ten] = Number(val) || 0;
+  hd.soTien[ten] = Number(val) || ;
   luuLocal();
   let tongHD = 0;
   hd.nguoi.forEach(n => { tongHD += (hd.soTien[n] || 0); });
@@ -415,8 +414,8 @@ function copyTuNguoiDau(hdId) {
   if (!ctDangChon) return;
   const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
   if (!hd || hd.nguoi.length === 0) return;
-  const nguoiDau = hd.nguoi[0];
-  const tien = hd.soTien[nguoiDau] || 0;
+  const nguoiDau = hd.nguoi[];
+  const tien = hd.soTien[nguoiDau] ||  ;
   hd.nguoi.forEach(n => hd.soTien[n] = tien);
   luuLocal();
   openHDs.add(hdId);
@@ -635,7 +634,7 @@ function xuatExcel() {
 
 // ========== LƯU / TẢI ==========
 function luuLocal() {
-  localStorage.setItem('db_thuchi_v4', JSON.stringify(db));
+  localStorage.setItem('db_thuchi_v5', JSON.stringify(db));
 }
 
 async function luuDuLieu() {
@@ -645,7 +644,7 @@ async function luuDuLieu() {
     const data = JSON.stringify(db);
     const res = await fetch(`${WEB_APP_URL}?action=save&data=${encodeURIComponent(data)}`);
     const result = await res.json();
-    if (result.success) alert("✅ Đã lưu!");
+    if (result.success) alert(`✅ Đã lưu! (${result.soCT} công tác, ${result.soHD} dòng hoạt động)`);
     else alert("Lỗi: " + (result.error || "Unknown"));
   } catch (e) { alert("Lỗi kết nối: " + e.message); }
   document.getElementById('loading').style.display = 'none';
@@ -659,17 +658,17 @@ async function taiDuLieu() {
     const text = await res.text();
     if (text && text !== "{}") {
       const loaded = JSON.parse(text);
-      if (loaded.congTac) {
+      if (loaded.error) { alert("Lỗi: " + loaded.error); }
+      else {
+        if (!loaded.nhanSu || loaded.nhanSu.length === 0) loaded.nhanSu = [...DS_NV_MAC_DINH];
         db = loaded;
-        if (!db.nhanSu || db.nhanSu.length === 0) db.nhanSu = [...DS_NV_MAC_DINH];
-      } else {
-        db = { congTac: loaded, nhanSu: [...DS_NV_MAC_DINH] };
+        luuLocal();
+        openHDs = new Set();
+        renderChonCT();
+        renderChipsCT();
+        hienThiChiTietCT();
+        alert(`✅ Đã tải! (${Object.keys(db.congTac).length} công tác)`);
       }
-      luuLocal();
-      openHDs = new Set();
-      renderChonCT();
-      hienThiChiTietCT();
-      alert("✅ Đã tải dữ liệu!");
     } else {
       alert("Chưa có dữ liệu.");
     }
