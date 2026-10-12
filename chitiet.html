@@ -138,11 +138,11 @@
 // ========== CẤU HÌNH ==========
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNy9XraPEoGZdIEkvJ2Vm1RKjkvB9Q2V1KP6MugkiRuca3Y9ivNA7zOPqJHrB6aZLG/exec";
 const DS_NV_MAC_DINH = [
-  "Nguyễn Hữu Kính","Hoàng Trần Quản Trọng","Ngô Văn Quang","Trần Văn Hoàng",
+  "Nguyễn Hữu Kính","Hoàng Trần Quản Trọng","Trần Văn Hoàng",
   "Kim Văn Quỳnh","Hồ Văn Huy","Lê Hữu Anh","Trần Phúc Linh","Tạ Quốc Đạt",
-  "Võ Ngọc Sơn","Nguyễn Xuân Khánh","Đoàn Hoàng Quang Định","Võ Văn Sỹ",
-  "Lưu Đức Minh","Nguyễn Mạnh Hiệp","Mai Văn Giáp","Nguyễn Thị Thanh Hương","Nguyễn Hữu Đạt",
-  "Nguyễn Mạnh Hòa","Bùi Thị Thái"
+ "Ngô Văn Quang", "Võ Ngọc Sơn","Nguyễn Xuân Khánh","Đoàn Hoàng Quang Định","Võ Văn Sỹ",
+  "Lưu Đức Minh","Nguyễn Hữu Đạt",
+  "Nguyễn Mạnh Hòa","Nguyễn Mạnh Hiệp","Mai Văn Giáp"
 ];
 const LAI_XE = ["Nguyễn Mạnh Hiệp", "Mai Văn Giáp"];
 
@@ -389,7 +389,7 @@ function themHoatDong() {
   if (!noiDung) { alert("Nhập nội dung!"); return; }
   if (hdNguoiTam.length === 0) { alert("Chọn ít nhất 1 người!"); return; }
   const soTien = {};
-  hdNguoiTam.forEach(n => soTien[n] = 0);
+  hdNguoiTam.forEach(n => soTien[n] = '');
   const newId = genId();
   ctDangChon.hoatDong.push({ id: newId, ngay, noiDung, loai, nguoi: [...hdNguoiTam], soTien });
   hdNguoiTam = [];
@@ -644,7 +644,7 @@ async function luuDuLieu() {
     const data = JSON.stringify(db);
     const res = await fetch(`${WEB_APP_URL}?action=save&data=${encodeURIComponent(data)}`);
     const result = await res.json();
-    if (result.success) alert(`✅ Đã lưu! (${result.soCT} công tác, ${result.soHD} dòng hoạt động)`);
+    if (result.success) alert(`✅ Đã lưu! (${result.soCT} công tác, ${result.soHD} hoạt động)`);
     else alert("Lỗi: " + (result.error || "Unknown"));
   } catch (e) { alert("Lỗi kết nối: " + e.message); }
   document.getElementById('loading').style.display = 'none';
