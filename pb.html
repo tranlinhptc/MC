@@ -2,67 +2,58 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Biên Bản Công Tác</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
 <style>
-  * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-  body { background: #f0f2f5; margin: 0; padding: 10px; font-size: 14px; }
-  .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-  h1 { color: #c00; text-align: center; font-size: 20px; margin: 0 0 15px; text-transform: uppercase; }
-  
-  .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-  .tab-btn { flex: 1; padding: 12px; background: #e9ecef; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-  .tab-btn.active { background: #007bff; color: #fff; box-shadow: 0 2px 5px rgba(0,123,255,0.3); }
+  * { box-sizing: border-box; font-family: Arial, sans-serif; }
+  body { background: #f0f2f5; margin: 0; padding: 10px; }
+  .container { max-width: 100%; background: #fff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  h1 { color: #c00; text-align: center; font-size: 20px; margin: 0 0 10px; text-transform: uppercase; }
+  h3 { color: #0056b3; border-bottom: 2px solid #007bff; padding-bottom: 4px; margin: 15px 0 8px; font-size: 15px; }
+
+  .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+  .tab-btn { flex: 1; padding: 10px; background: #e9ecef; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+  .tab-btn.active { background: #007bff; color: #fff; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
-  .form-group { margin-bottom: 12px; }
-  label { font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; color: #333; }
-  input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-  input:focus, select:focus, textarea:focus { border-color: #007bff; }
+  .form-group { margin-bottom: 10px; }
+  label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 3px; color: #c00; }
+  input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
   textarea { resize: vertical; min-height: 80px; }
-  
-  button { border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
-  button:active { opacity: 0.8; }
-  .btn-blue { background: #007bff; color: #fff; } 
-  .btn-orange { background: #fd7e14; color: #fff; } 
-  .btn-gray { background: #6c757d; color: #fff; }
-  .btn-green { background: #28a745; color: #fff; }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
-  .btn-block { display: block; width: 100%; margin-top: 15px;}
+  button { background: #28a745; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin: 2px 0; }
+  .btn-blue { background: #007bff; } .btn-red { background: #dc3545; } .btn-orange { background: #fd7e14; } .btn-gray { background: #6c757d; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; width: auto; }
+  .btn-block { display: block; width: 100%; }
 
-  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin: 5px 0; }
-  .chip { padding: 8px 12px; border-radius: 20px; border: 1px solid #ced4da; background: #f8f9fa; color: #495057; font-size: 12px; cursor: pointer; user-select: none; }
-  .chip.selected { background: #007bff; color: #fff; border-color: #007bff; font-weight: 600; }
+  .chip-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 5px 0; }
+  .chip { padding: 8px 4px; border-radius: 15px; border: 2px solid #ccc; background: #f4f4f4; color: #666; font-size: 11px; cursor: pointer; text-align: center; font-weight: normal; }
+  .chip.selected { background: #007bff; color: #fff; border-color: #007bff; font-weight: bold; }
 
-  .bb-item { border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .bb-item h4 { margin: 0 0 8px; color: #0056b3; font-size: 15px; }
-  .bb-item .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .bb-item { border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 8px; background: #fafafa; }
+  .bb-item h4 { margin: 0 0 5px; color: #0056b3; font-size: 14px; }
+  .bb-item .info { font-size: 12px; color: #666; }
+  .bb-item .actions { margin-top: 5px; display: flex; gap: 5px; }
 
-  #loading { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(255,255,255,0.85); flex-direction: column; align-items: center; justify-content: center; color: #007bff; font-weight: bold; font-size: 16px; backdrop-filter: blur(2px); }
-  .toolbar { display: flex; gap: 8px; margin-bottom: 15px; }
-  
-  .edit-mode-banner { display: none; background: #fff3cd; color: #856404; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; text-align: center; border: 1px solid #ffeeba; font-weight: 600;}
+  #loading { display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(255,255,255,0.9); align-items: center; justify-content: center; color: #007bff; font-weight: bold; font-size: 18px; }
+  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .toolbar button { flex: 1; min-width: 100px; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>📋 BIÊN BẢN CÔNG TÁC</h1>
+  <h1>📋 BIÊN BẢN</h1>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(0)">📝 Nhập liệu</button>
+    <button class="tab-btn active" onclick="switchTab(0)">📝 Nhập biên bản</button>
     <button class="tab-btn" onclick="switchTab(1)">📚 Danh sách</button>
   </div>
 
   <!-- TAB 1: NHẬP BIÊN BẢN -->
   <div class="tab-content active" id="tab0">
-    <div class="edit-mode-banner" id="editBanner">
-      ⚠️ Đang ở chế độ HIỆU CHỈNH biên bản cũ. <a href="#" onclick="thoatCheDoSua(event)">Hủy</a>
-    </div>
-
     <div class="form-group">
       <label>Chỉ huy trực tiếp:</label>
       <select id="chiHuy">
@@ -83,47 +74,48 @@
     </div>
     <div class="form-group">
       <label>Số GĐKCT:</label>
-      <input type="text" id="stt" placeholder="Nhập số GĐKCT...">
+      <input type="text" id="stt" placeholder="Số GĐKCT...">
     </div>
     <div class="form-group">
-      <label>Nội dung công tác:</label>
-      <textarea id="noiDung" placeholder="Nhập nội dung..."></textarea>
+      <label>Nội dung:</label>
+      <textarea id="noiDung" placeholder="Nội dung..."></textarea>
     </div>
     <div class="form-group">
       <label>Địa điểm:</label>
-      <input type="text" id="diaDiem" placeholder="Địa điểm thực hiện..." list="diaDiemSuggestions">
+      <input type="text" id="diaDiem" placeholder="Địa điểm..." list="diaDiemSuggestions">
       <datalist id="diaDiemSuggestions"></datalist>
     </div>
     <div class="form-group">
-      <label>Thời gian Phổ biến ATC:</label>
+      <label>Time PATC:</label>
       <input type="datetime-local" id="startBB1">
     </div>
     <div class="form-group">
-      <label>Thời gian Hiện trường:</label>
+      <label>Time Hiện trường:</label>
       <input type="datetime-local" id="startBB2">
     </div>
-    <button class="btn-blue btn-block" onclick="xuatFile()">📄 XUẤT & LƯU BIÊN BẢN</button>
+    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất & Lưu biên bản</button>
   </div>
 
   <!-- TAB 2: DANH SÁCH -->
   <div class="tab-content" id="tab1">
-    <div class="toolbar">
-      <select id="locThang" onchange="renderDanhSach()" style="flex: 2;">
-        <option value="">-- Tất cả các tháng --</option>
+    <div class="form-group">
+      <label>Lọc theo tháng:</label>
+      <select id="locThang" onchange="renderDanhSach()">
+        <option value="">-- Tất cả --</option>
       </select>
-      <button class="btn-gray" onclick="taiTuSheet()" style="flex: 1;">🔄 Đồng bộ</button>
+    </div>
+    <div class="toolbar">
+      <button class="btn-gray" onclick="taiTuSheet()">🔄 Lịch sử từ Sheet</button>
     </div>
     <div id="danhSachBB"></div>
   </div>
 </div>
 
-<div id="loading">
-  <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
-  Đang xử lý dữ liệu...
-</div>
+<div id="loading">⏳ Đang xử lý...</div>
 
 <script>
 // ========== CẤU HÌNH ==========
+// THAY LINK MỚI VÀO ĐÂY ANH NHÉ
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxO2dgiHOGiWS880ghwHWimdL7oQ20jhTGAH0mKB-otFcm9J0zsL--_OId8CrqLIXl/exec";
 const ID_TEMPLATE_BB1 = "1Gj1PDFAHWeKG_2PCod4dLKHvXxq5xf6u";
 const DS_NV = ["Nguyễn Hữu Kính", "Hoàng Trần Quản Trọng", "Ngô Văn Quang", "Trần Văn Hoàng", "Kim Văn Quỳnh", "Hồ Văn Huy", "Lê Hữu Anh", "Trần Phúc Linh", "Tạ Quốc Đạt", "Võ Ngọc Sơn", "Nguyễn Xuân Khánh", "Đoàn Hoàng Quang Định", "Võ Văn Sỹ", "Lưu Đức Minh", "Nguyễn Hữu Đạt", "Nguyễn Mạnh Hoà"];
@@ -131,9 +123,7 @@ const DS_NV = ["Nguyễn Hữu Kính", "Hoàng Trần Quản Trọng", "Ngô Vă
 // ========== STATE ==========
 let dbPhobien = JSON.parse(localStorage.getItem('db_phobien') || '{"items":[]}');
 if (!dbPhobien.items) dbPhobien.items = [];
-
 let nguoiTam = [];
-let currentEditId = null; // Cực quan trọng để theo dõi chế độ Edit/Thêm mới
 
 // ========== HELPERS ==========
 function getShortName(full) {
@@ -145,58 +135,51 @@ function getShortName(full) {
   }
   return ten;
 }
-function displayName(full) { return "Mr. " + getShortName(full); }
+function displayName(full) { return "Mr." + getShortName(full); }
 function genId() { return 'pb_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
 
 function formatDT(s) {
   let d = new Date(s);
   return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)} ngày ${('0'+d.getDate()).slice(-2)}/${('0'+(d.getMonth()+1)).slice(-2)}/${d.getFullYear()}`;
 }
-function formatTime(d) {
-  return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)}`;
-}
+function formatTime(d) { return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)}`; }
 function formatDate(s) {
   let d = new Date(s);
   return `ngày ${('0'+d.getDate()).slice(-2)} tháng ${('0'+(d.getMonth()+1)).slice(-2)} năm ${d.getFullYear()}`;
 }
 
-// Hàm tải xuống mượt mà trên mobile
+// ========== TẢI FILE ==========
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = filename; a.target = '_blank';
+  a.href = url; a.download = filename; a.target = '_blank'; a.rel = 'noopener'; a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 3000);
+  setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); URL.revokeObjectURL(url); }, 5000);
 }
 
-// ========== TABS ==========
+// ========== TAB ==========
 function switchTab(idx) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
   document.querySelectorAll('.tab-content').forEach((c,i) => c.classList.toggle('active', i===idx));
   if (idx === 1) { renderLocThang(); renderDanhSach(); }
 }
 
-// ========== FORM & CHIPS ==========
+// ========== FORM ==========
 function renderChips() {
   const container = document.getElementById('nvContainer');
-  container.innerHTML = DS_NV.map(nv => `
-    <div class="chip ${nguoiTam.includes(nv) ? 'selected' : ''}" 
-         onclick="toggleNguoi('${nv.replace(/'/g,"\\'")}')">
-      ${displayName(nv)}
-    </div>
-  `).join('');
+  container.innerHTML = DS_NV.map(nv => {
+    const sel = nguoiTam.includes(nv) ? 'selected' : '';
+    return `<div class="chip ${sel}" onclick="toggleNguoi('${nv.replace(/'/g,"\\'")}')">${displayName(nv)}</div>`;
+  }).join('');
 }
-
 function toggleNguoi(ten) {
   if (nguoiTam.includes(ten)) nguoiTam = nguoiTam.filter(n => n !== ten);
   else nguoiTam.push(ten);
-  renderChips();
-  saveLocalTemp();
+  renderChips(); saveLocal();
 }
 
-function saveLocalTemp() {
-  // Chỉ lưu nháp, không lưu currentEditId để tránh lỗi khi f5
+function saveLocal() {
   const data = {
     chiHuy: document.getElementById('chiHuy').value,
     nhanVien: [...nguoiTam],
@@ -206,235 +189,281 @@ function saveLocalTemp() {
     startBB1: document.getElementById('startBB1').value,
     startBB2: document.getElementById('startBB2').value
   };
-  localStorage.setItem('bienBanTemp', JSON.stringify(data));
+  localStorage.setItem('bienBanData', JSON.stringify(data));
 }
 
-function restoreLocalTemp() {
-  const saved = localStorage.getItem('bienBanTemp');
+function restoreLocal() {
+  const saved = localStorage.getItem('bienBanData');
   if (!saved) return;
   try {
     const data = JSON.parse(saved);
-    ['chiHuy','stt','noiDung','diaDiem','startBB1','startBB2'].forEach(id => {
-      if(data[id]) document.getElementById(id).value = data[id];
-    });
-    if (data.nhanVien) { nguoiTam = [...data.nhanVien]; renderChips(); }
+    if (data.chiHuy) document.getElementById('chiHuy').value = data.chiHuy;
+    if (data.stt) document.getElementById('stt').value = data.stt;
+    if (data.noiDung) document.getElementById('noiDung').value = data.noiDung;
+    if (data.diaDiem) document.getElementById('diaDiem').value = data.diaDiem;
+    if (data.startBB1) document.getElementById('startBB1').value = data.startBB1;
+    if (data.startBB2) document.getElementById('startBB2').value = data.startBB2;
+    if (data.nhanVien && Array.isArray(data.nhanVien)) { nguoiTam = [...data.nhanVien]; renderChips(); }
   } catch(e) {}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   ['chiHuy','stt','noiDung','diaDiem','startBB1','startBB2'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', saveLocalTemp);
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('input', saveLocal); el.addEventListener('change', saveLocal); }
   });
-  document.getElementById('noiDung').addEventListener('input', function() {
+  const noiDung = document.getElementById('noiDung');
+  noiDung.addEventListener('input', function() {
     this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';
+    updateDiaDiemSuggestions();
   });
+  document.getElementById('diaDiem').addEventListener('input', updateDiaDiemSuggestions);
 });
 
-// ========== KẾT NỐI API ==========
-function apiGet(action, extraParams = "") {
-  return new Promise((resolve, reject) => {
-    const cb = 'jsonp_' + Date.now();
-    window[cb] = function(data) {
-      delete window[cb];
-      document.getElementById(cb)?.remove();
-      data.error ? reject(data.error) : resolve(data);
-    };
-    const s = document.createElement('script');
-    s.id = cb;
-    s.src = `${WEB_APP_URL}?action=${action}${extraParams}&callback=${cb}`;
-    s.onerror = () => reject("Mất kết nối mạng");
-    document.body.appendChild(s);
+function updateDiaDiemSuggestions() {
+  const noiDung = document.getElementById('noiDung').value;
+  const datalist = document.getElementById('diaDiemSuggestions');
+  datalist.innerHTML = '';
+  if (!noiDung.trim()) return;
+  const lines = noiDung.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const suggestions = new Set();
+  lines.forEach(line => {
+    const match = line.match(/^(?:tại|ở|địa điểm|nơi)\s+(.+)/i);
+    if (match) suggestions.add(match[1].trim());
+    else if (line.includes(',')) suggestions.add(line);
+    else if (line.length > 5 && line.length < 100 && !line.includes(':')) suggestions.add(line);
+  });
+  suggestions.forEach(s => {
+    const option = document.createElement('option');
+    option.value = s; datalist.appendChild(option);
   });
 }
 
-// Gửi POST không CORS, sử dụng Text/Plain trick hoặc Form data
-function guiLenSheet(item, callback) {
-  // Form encode payload
-  const params = new URLSearchParams();
-  params.append('action', 'savePhobien');
-  params.append('data', JSON.stringify(item));
-  
-  fetch(WEB_APP_URL, {
-    method: 'POST',
-    mode: 'no-cors', // Bắt buộc trên trình duyệt nếu ko chỉnh AppScript CORS
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString()
-  }).then(() => callback(true)).catch(() => callback(false));
+// ========== JSONP: LẤY TEMPLATE ==========
+function getTemplateJSONP(fileId) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      const script = document.getElementById(callbackName);
+      if (script) document.body.removeChild(script);
+      if (data.error) reject(new Error(data.error)); else resolve(data.base64);
+    };
+    const script = document.createElement('script');
+    script.id = callbackName;
+    script.src = `${WEB_APP_URL}?action=getTemplate&fileId=${fileId}&callback=${callbackName}`;
+    script.onerror = function() { reject(new Error("Không thể tải template")); };
+    document.body.appendChild(script);
+  });
 }
 
-// ========== XỬ LÝ CHÍNH ==========
+// ========== JSONP: LOAD PHOBIEN ==========
+function loadPhobienJSONP() {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'jsonp_load_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      const script = document.getElementById(callbackName);
+      if (script) document.body.removeChild(script);
+      if (data.error) reject(new Error(data.error)); else resolve(data.phobien || []);
+    };
+    const script = document.createElement('script');
+    script.id = callbackName;
+    script.src = `${WEB_APP_URL}?action=loadPhobien&callback=${callbackName}`;
+    script.onerror = function() { reject(new Error("Không thể tải dữ liệu")); };
+    document.body.appendChild(script);
+  });
+}
+
+// ========== GỬI LÊN SHEET BẰNG IFRAME (CHỐNG LỖI ĐIỆN THOẠI) ==========
+function guiLenSheet(item, callback) {
+  const url = WEB_APP_URL + '?action=savePhobien';
+  
+  // Tạo iframe ẩn để submit form ngầm, tránh bị trình duyệt điện thoại ngắt kết nối
+  const iframeName = 'hiddenIframe_' + Date.now();
+  const iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = url;
+  form.target = iframeName;
+
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'data';
+  input.value = JSON.stringify(item);
+
+  form.appendChild(input);
+  document.body.appendChild(form);
+  
+  form.submit();
+
+  // Đợi 0.5s để form gửi đi thành công, sau đó callback chạy tiếp tục tải Word xuống
+  setTimeout(() => {
+    document.body.removeChild(form);
+    setTimeout(() => { if(document.body.contains(iframe)) document.body.removeChild(iframe); }, 5000);
+    if (callback) callback(true);
+  }, 500);
+}
+
+// ========== XUẤT FILE + LƯU SHEET ==========
 async function xuatFile() {
-  const noiDung = document.getElementById('noiDung').value;
+  const noiDungRaw = document.getElementById('noiDung').value;
+  const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
   const start1 = document.getElementById('startBB1').value;
   const start2 = document.getElementById('startBB2').value;
   const stt = document.getElementById('stt').value.trim();
   const chiHuy = document.getElementById('chiHuy').value;
   const diaDiem = document.getElementById('diaDiem').value.trim();
 
-  if (!noiDung || !start1 || !start2 || !stt || nguoiTam.length === 0) {
-    alert("Vui lòng điền đủ thông tin, STT và chọn ít nhất 1 nhân viên!");
-    return;
-  }
+  if (!noiDung || !start1 || !start2) { alert("Vui lòng điền đủ thông tin!"); return; }
+  if (nguoiTam.length === 0) { alert("Chọn ít nhất 1 nhân viên!"); return; }
+  if (!stt) { alert("Nhập số GĐKCT!"); return; }
 
   document.getElementById("loading").style.display = "flex";
 
-  // Chuẩn bị dữ liệu Template
-  let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung.replace(/\n/g, ' ') }));
-  let t1 = new Date(start1), t2 = new Date(start2);
-  let docData = {
-    stt: stt, nguoi_chu_tri: chiHuy, noi_dung_cong_tac: noiDung.replace(/\n/g, ' '), dia_diem_cong_tac: diaDiem,
-    tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`, danh_sach_nhan_vien: tv,
-    thoi_gian_bat_dau1: formatDT(start1), thoi_gian_ket_thuc1: formatTime(new Date(t1.getTime() + 30*60000)), ngay_pho_bien: formatDate(start1),
-    thoi_gian_bat_dau2: formatDT(start2), thoi_gian_ket_thuc2: formatTime(new Date(t2.getTime() + 10*60000))
+  let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung }));
+  let data = {
+    stt: stt, nguoi_chu_tri: chiHuy, tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
+    noi_dung_cong_tac: noiDung, dia_diem_cong_tac: diaDiem, danh_sach_nhan_vien: tv,
+    thoi_gian_bat_dau1: formatDT(start1), thoi_gian_ket_thuc1: formatTime(new Date(new Date(start1).getTime() + 30*60000)),
+    ngay_pho_bien: formatDate(start1), thoi_gian_bat_dau2: formatDT(start2),
+    thoi_gian_ket_thuc2: formatTime(new Date(new Date(start2).getTime() + 10*60000))
   };
 
   try {
-    // 1. Xuất Word
-    const res = await apiGet('getTemplate', `&fileId=${ID_TEMPLATE_BB1}`);
-    const binary = window.atob(res.base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const doc = new window.docxtemplater(new PizZip(bytes.buffer), { paragraphLoop: true, linebreaks: true });
-    doc.render(docData);
-    downloadBlob(doc.getZip().generate({ type: "blob" }), `${stt}. Pho bien.docx`);
-
-    // 2. Định danh và lưu
-    // NẾU LÀ HIỆU CHỈNH: Giữ nguyên currentEditId. NẾU LÀ TẠO MỚI: Dùng ID mới.
-    const recordId = currentEditId ? currentEditId : genId();
+    const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
+    const binary1 = window.atob(base64_1);
+    const bytes1 = new Uint8Array(binary1.length);
+    for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
+    const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
+    doc1.render(data);
+    const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     
     const item = {
-      id: recordId,
-      ngayTao: new Date().toLocaleString('vi-VN'),
-      stt: stt, chiHuy: chiHuy, nhanVien: [...nguoiTam], noiDung: noiDung, diaDiem: diaDiem,
-      timePATC: formatDT(start1), timeHienTruong: formatDT(start2),
-      thoiGianTao: new Date().toISOString()
+      id: genId(), ngayTao: new Date().toLocaleString('vi-VN'), stt: stt,
+      chiHuy: chiHuy, nhanVien: [...nguoiTam], noiDung: noiDungRaw, diaDiem: diaDiem,
+      timePATC: formatDT(start1), timeHienTruong: formatDT(start2), thoiGianTao: new Date().toISOString()
     };
-
-    // Cập nhật Local Storage
-    const idx = dbPhobien.items.findIndex(x => x.id === recordId);
-    if(idx >= 0) dbPhobien.items[idx] = item; // Cập nhật
-    else dbPhobien.items.push(item); // Thêm mới
+    dbPhobien.items.push(item);
     localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
 
-    // 3. Đẩy lên Sheet
+    // Đẩy lên Google Sheet qua iframe ẩn trước khi ra lệnh tải Word
     guiLenSheet(item, (ok) => {
       document.getElementById("loading").style.display = "none";
-      if(ok) {
-        alert(currentEditId ? "✅ Đã HIỆU CHỈNH và lưu biên bản!" : "✅ Đã THÊM MỚI và lưu biên bản!");
-        thoatCheDoSua(); // Reset form & state
-        switchTab(1); // Chuyển sang xem danh sách
-      } else {
-        alert("⚠️ Xuất file thành công nhưng kết nối Sheet bị gián đoạn.");
-      }
+      downloadBlob(blob1, `${stt}. Pho bien.docx`);
+      alert("✅ Đã xuất Word và Lưu trữ thành công!");
+      switchTab(1);
     });
   } catch (e) {
-    document.getElementById("loading").style.display = "none";
     alert("Lỗi: " + e.message);
+    document.getElementById("loading").style.display = "none";
   }
 }
 
-// ========== QUẢN LÝ DANH SÁCH ==========
+// ========== DANH SÁCH ==========
 function renderLocThang() {
   const sel = document.getElementById('locThang');
   const curVal = sel.value;
-  const ds = new Set(dbPhobien.items.map(i => {
-    const m = i.timePATC?.match(/ngày (\d{2})\/(\d{2})\/(\d{4})/);
-    return m ? `${m[3]}-${m[2]}` : null;
-  }).filter(Boolean));
-  
-  sel.innerHTML = '<option value="">-- Tất cả các tháng --</option>' + 
-    [...ds].sort().reverse().map(t => `<option value="${t}">Tháng ${t.split('-')[1]}/${t.split('-')[0]}</option>`).join('');
+  const dsThang = new Set();
+  dbPhobien.items.forEach(item => {
+    if (item.timePATC) {
+      const m = item.timePATC.match(/ngày (\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) dsThang.add(`${m[3]}-${m[2]}`);
+    }
+  });
+  const arr = [...dsThang].sort().reverse();
+  sel.innerHTML = '<option value="">-- Tất cả --</option>' + arr.map(t => {
+    const [y, m] = t.split('-'); return `<option value="${t}">Tháng ${m}/${y}</option>`;
+  }).join('');
   if (curVal) sel.value = curVal;
 }
 
 function renderDanhSach() {
-  const c = document.getElementById('danhSachBB');
-  const loc = document.getElementById('locThang').value;
-  let list = dbPhobien.items.sort((a,b) => new Date(b.thoiGianTao) - new Date(a.thoiGianTao));
-  
-  if (loc) {
-    const [y, m] = loc.split('-');
-    list = list.filter(i => i.timePATC?.includes(`/${m}/${y}`));
+  const container = document.getElementById('danhSachBB');
+  const thangLoc = document.getElementById('locThang').value;
+  let list = dbPhobien.items;
+  if (thangLoc) {
+    const [y, m] = thangLoc.split('-');
+    list = list.filter(item => {
+      if (!item.timePATC) return false;
+      const match = item.timePATC.match(/ngày (\d{2})\/(\d{2})\/(\d{4})/);
+      return match && match[2] === m && match[3] === y;
+    });
   }
-  
-  if (!list.length) { c.innerHTML = '<p style="color:#888; text-align:center; padding: 20px;">Trống.</p>'; return; }
-  
-  c.innerHTML = list.map(item => `
+  if (list.length === 0) {
+    container.innerHTML = '<p style="color:#999;">Chưa có biên bản nào.</p>'; return;
+  }
+  container.innerHTML = list.map(item => `
     <div class="bb-item">
       <h4>📄 Số ${item.stt} - ${item.chiHuy}</h4>
-      <div style="font-size:12px; color:#555; margin-bottom:5px;">${item.diaDiem || 'Không ghi địa điểm'}</div>
-      <div style="font-size:11px; color:#999;">${item.timePATC}</div>
       <div class="actions">
-        <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')" style="flex:1">📝 Hiệu chỉnh</button>
-        <button class="btn-sm btn-orange" onclick="xoaLocal('${item.id}')">🗑️ Xóa thiết bị</button>
+        <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">📝 Load vào form</button>
+        <button class="btn-sm btn-red" onclick="xoaLocal('${item.id}')">🗑 Xóa Local</button>
       </div>
     </div>
   `).join('');
 }
 
-// CHỈ XÓA LOCAL BROWSER, KHÔNG CALL LÊN API SHEET
+// Hàm xóa Local không ảnh hưởng tới sheet
 function xoaLocal(id) {
-  if(!confirm("Hành động này chỉ xóa khỏi thiết bị của bạn, dữ liệu gốc trên Google Sheet VẪN ĐƯỢC GIỮ NGUYÊN. Tiếp tục?")) return;
-  dbPhobien.items = dbPhobien.items.filter(x => x.id !== id);
-  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
-  renderDanhSach();
+  if (confirm("Chỉ xóa dòng này trên trình duyệt hiện tại? (Dữ liệu trên Sheet vẫn được giữ nguyên)")) {
+    dbPhobien.items = dbPhobien.items.filter(x => x.id !== id);
+    localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+    renderLocThang();
+    renderDanhSach();
+  }
 }
 
 function loadVaoForm(id) {
   const item = dbPhobien.items.find(x => x.id === id);
   if (!item) return;
-  
-  currentEditId = id; // ĐÁNH DẤU CHẾ ĐỘ EDIT
-  document.getElementById('editBanner').style.display = 'block';
-
   document.getElementById('chiHuy').value = item.chiHuy;
   document.getElementById('stt').value = item.stt;
   document.getElementById('noiDung').value = item.noiDung;
   document.getElementById('diaDiem').value = item.diaDiem;
-  
-  const pDT = s => {
-    const m = s?.match(/(\d{2}) giờ (\d{2}) ngày (\d{2})\/(\d{2})\/(\d{4})/);
-    return m ? `${m[5]}-${m[4]}-${m[3]}T${m[1]}:${m[2]}` : '';
+  const parseDT = (str) => {
+    const m = str.match(/(\d{2}) giờ (\d{2}) ngày (\d{2})\/(\d{2})\/(\d{4})/);
+    if (!m) return '';
+    return `${m[5]}-${m[4]}-${m[3]}T${m[1]}:${m[2]}`;
   };
-  document.getElementById('startBB1').value = pDT(item.timePATC);
-  document.getElementById('startBB2').value = pDT(item.timeHienTruong);
-  
+  document.getElementById('startBB1').value = parseDT(item.timePATC) || '';
+  document.getElementById('startBB2').value = parseDT(item.timeHienTruong) || '';
   nguoiTam = [...item.nhanVien];
-  renderChips();
-  switchTab(0);
-  window.scrollTo(0, 0);
+  renderChips(); saveLocal(); switchTab(0); window.scrollTo(0, 0);
 }
 
-function thoatCheDoSua(e) {
-  if(e) e.preventDefault();
-  currentEditId = null;
-  document.getElementById('editBanner').style.display = 'none';
-  document.getElementById('stt').value = '';
-  document.getElementById('noiDung').value = '';
-  saveLocalTemp();
-}
-
+// ========== TẢI TỪ SHEET ==========
 async function taiTuSheet() {
   document.getElementById('loading').style.display = 'flex';
   try {
-    const list = await apiGet('loadPhobien');
-    if (list?.length > 0) {
-      dbPhobien.items = list; // Ghi đè bộ nhớ local bằng dữ liệu chuẩn từ sheet
+    const list = await loadPhobienJSONP();
+    if (list && list.length > 0) {
+      const existingIds = new Set(dbPhobien.items.map(x => x.id));
+      let added = 0;
+      list.forEach(item => {
+        if (!existingIds.has(item.id)) { dbPhobien.items.push(item); added++; }
+      });
       localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
       renderLocThang(); renderDanhSach();
-      alert(`✅ Đã đồng bộ ${list.length} bản ghi từ Server.`);
-    } else alert("Sheet gốc đang trống.");
-  } catch (e) { alert("Lỗi tải: " + e); }
+      alert(`✅ Đã tải ${list.length} biên bản (thêm mới ${added}).`);
+    } else {
+      alert("Sheet chưa có dữ liệu.");
+    }
+  } catch (e) { alert("Lỗi tải: " + e.message); }
   document.getElementById('loading').style.display = 'none';
 }
 
-window.onload = () => {
-  renderChips(); restoreLocalTemp();
-  const n = new Date();
-  const pad = x => String(x).padStart(2,'0');
-  const df = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}T${pad(n.getHours())}:${pad(n.getMinutes())}`;
-  if (!document.getElementById('startBB1').value) document.getElementById('startBB1').value = df;
-  if (!document.getElementById('startBB2').value) document.getElementById('startBB2').value = df;
+// ========== KHỞI TẠO ==========
+window.onload = function() {
+  renderChips(); restoreLocal();
+  const now = new Date();
+  const defaultDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if (!document.getElementById('startBB1').value) document.getElementById('startBB1').value = defaultDate;
+  if (!document.getElementById('startBB2').value) document.getElementById('startBB2').value = defaultDate;
 };
 </script>
 </body>
