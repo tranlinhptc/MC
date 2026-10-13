@@ -459,9 +459,9 @@ function renderDanhSach() {
   container.innerHTML = list.map(item => `
     <div class="bb-item">
       <h4>📄 Số ${item.stt} - ${item.chiHuy}</h4>
-      <div class="info">👥 ${item.nhanVien.map(displayName).join(', ')}</div>
-      <div class="info">📅 PATC: ${item.timePATC || ''} | Hiện trường: ${item.timeHienTruong || ''}</div>
-      <div class="info">📍 ${item.diaDiem || ''}</div>
+      //<!--<div class="info">👥 ${item.nhanVien.map(displayName).join(', ')}</div>
+      //<div class="info">📅 PATC: ${item.timePATC || ''} | Hiện trường: ${item.timeHienTruong || ''}</div>
+      //<div class="info">📍 ${item.diaDiem || ''}</div> -->
       <div class="actions">
         <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">📝 Load vào form</button>
       </div>
