@@ -45,7 +45,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>📋 BIÊN BẢN CÔNG TÁC</h1>
+  <h1>📋 BIÊN BẢN</h1>
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab(0)">📝 Nhập biên bản</button>
@@ -379,7 +379,7 @@ async function xuatFile() {
 
     // Lưu lên Sheet (1 dòng duy nhất)
     guiLenSheet(item, () => {
-      alert("✅ Đã xuất file và lưu lên Sheet!");
+      alert("✅ Đã xuất và lưu!");
       document.getElementById("loading").style.display = "none";
       switchTab(1);
     });
@@ -459,7 +459,7 @@ function renderDanhSach() {
   container.innerHTML = list.map(item => `
     <div class="bb-item">
       <h4>📄 Số ${item.stt} - ${item.chiHuy}</h4>
-      //<!--<div class="info">👥 ${item.nhanVien.map(displayName).join(', ')}</div>
+      <!--<div class="info">👥 ${item.nhanVien.map(displayName).join(', ')}</div>
       //<div class="info">📅 PATC: ${item.timePATC || ''} | Hiện trường: ${item.timeHienTruong || ''}</div>
       //<div class="info">📍 ${item.diaDiem || ''}</div> -->
       <div class="actions">
@@ -507,7 +507,7 @@ async function taiTuSheet() {
       localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
       renderLocThang();
       renderDanhSach();
-      alert(`✅ Đã tải ${list.length} biên bản từ Sheet (thêm mới ${added}).`);
+      alert(`✅ Đã tải ${list.length} biên bản (thêm mới ${added}).`);
     } else {
       alert("Sheet chưa có dữ liệu.");
     }
