@@ -94,6 +94,7 @@
       <input type="datetime-local" id="startBB2">
     </div>
     <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất 2 biên bản</button>
+    <button class="btn-orange btn-block" onclick="luuNhanh()" style="margin-top:6px;">💾 Lưu lên Sheet</button>
   </div>
 
   <!-- TAB 2: DANH SÁCH -->
@@ -335,12 +336,10 @@ async function xuatFile() {
     localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
 
     // Gọi API lưu Sheet
-await fetch(`${WEB_APP_URL}?action=savePhobien`, {
-    method: 'POST',
-    body: JSON.stringify(item)
-});
+guiLenSheet(item);  // Dùng form ẩn thay vì fetch
 
-    alert("✅ Đã xuất 2 biên bản và lưu!");
+alert("✅ Đã xuất 2 biên bản và lưu!");
+   
     document.getElementById("loading").style.display = "none";
     switchTab(1);
   } catch (e) {
@@ -430,19 +429,26 @@ function xoaItem(id) {
   renderDanhSach();
 }
 
-async function luuLenSheet() {
+function luuLenSheet() {
   if (dbPhobien.items.length === 0) { alert("Chưa có dữ liệu!"); return; }
   if (!confirm(`Lưu ${dbPhobien.items.length} biên bản lên Sheet?`)) return;
   document.getElementById('loading').style.display = 'flex';
-  try {
-    for (const item of dbPhobien.items) {
-      await fetch(`${WEB_APP_URL}?action=savePhobien&data=${encodeURIComponent(JSON.stringify(item))}`);
-    }
-    alert("✅ Đã lưu lên Sheet!");
-  } catch (e) { alert("Lỗi: " + e.message); }
-  document.getElementById('loading').style.display = 'none';
+  
+  let done = 0;
+  dbPhobien.items.forEach((item, idx) => {
+    setTimeout(() => {
+      guiLenSheet(item, () => {
+        done++;
+        if (done === dbPhobien.items.length) {
+          document.getElementById('loading').style.display = 'none';
+          alert("✅ Đã lưu tất cả lên Sheet!");
+        }
+      });
+    }, idx * 800);  // Giãn cách 0.8s để tránh bị chặn
+  });
 }
 
+ 
 async function taiTuSheet() {
   document.getElementById('loading').style.display = 'flex';
   try {
@@ -477,6 +483,85 @@ window.onload = function() {
   if (!document.getElementById('startBB1').value) document.getElementById('startBB1').value = defaultDate;
   if (!document.getElementById('startBB2').value) document.getElementById('startBB2').value = defaultDate;
 };
+ // Gửi dữ liệu lên Sheet bằng form ẩn (không bị CORS chặn)
+function guiLenSheet(item, callback) {
+  // Tạo iframe ẩn để nhận kết quả
+  let iframeName = 'hidden_iframe_' + Date.now();
+  let iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  // Tạo form ẩn
+  let form = document.createElement('form');
+  form.method = 'POST';
+  form.action = WEB_APP_URL + '?action=savePhobien';
+  form.target = iframeName;
+  form.style.display = 'none';
+
+  // Thêm dữ liệu
+  let input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'data';
+  input.value = JSON.stringify(item);
+  form.appendChild(input);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  // Dọn dẹp sau 5s
+  setTimeout(() => {
+    document.body.removeChild(form);
+    document.body.removeChild(iframe);
+    if (callback) callback();
+  }, 5000);
+}
+
+// Nút "Lưu lên Sheet" ở tab Nhập
+function luuNhanh() {
+  const noiDungRaw = document.getElementById('noiDung').value;
+  const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
+  const start1 = document.getElementById('startBB1').value;
+  const start2 = document.getElementById('startBB2').value;
+  const stt = document.getElementById('stt').value.trim();
+  const chiHuy = document.getElementById('chiHuy').value;
+  const diaDiem = document.getElementById('diaDiem').value.trim();
+
+  if (!noiDung || !start1 || !start2 || !stt) {
+    alert("Vui lòng điền đủ thông tin!");
+    return;
+  }
+  if (nguoiTam.length === 0) {
+    alert("Chọn ít nhất 1 nhân viên!");
+    return;
+  }
+
+  const item = {
+    id: genId(),
+    ngayTao: new Date().toLocaleString('vi-VN'),
+    stt: stt,
+    chiHuy: chiHuy,
+    nhanVien: [...nguoiTam],
+    noiDung: noiDungRaw,
+    diaDiem: diaDiem,
+    timePATC: formatDT(start1),
+    timeHienTruong: formatDT(start2),
+    thoiGianTao: new Date().toISOString()
+  };
+
+  // Lưu local trước
+  dbPhobien.items.push(item);
+  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+
+  // Gửi lên Sheet
+  document.getElementById('loading').style.display = 'flex';
+  guiLenSheet(item, () => {
+    document.getElementById('loading').style.display = 'none';
+    alert("✅ Đã lưu lên Sheet!");
+    renderLocThang();
+    renderDanhSach();
+  });
+}
 </script>
 </body>
 </html>
