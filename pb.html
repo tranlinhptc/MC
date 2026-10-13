@@ -93,8 +93,7 @@
       <label>Time Hiện trường:</label>
       <input type="datetime-local" id="startBB2">
     </div>
-    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất biên bản</button>
-    <button class="btn-orange btn-block" onclick="luuNhanh()" style="margin-top:6px;">💾 Lưu</button>
+    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất & Lưu biên bản</button>
   </div>
 
   <!-- TAB 2: DANH SÁCH -->
@@ -106,8 +105,7 @@
       </select>
     </div>
     <div class="toolbar">
-      <button class="btn-gray" onclick="taiTuSheet()">🔄 Lịch sử</button>
-      <button class="btn-orange" onclick="luuLenSheet()">💾 Lưu lên Sheet</button>
+      <button class="btn-gray" onclick="taiTuSheet()">🔄 Lịch sử từ Sheet</button>
     </div>
     <div id="danhSachBB"></div>
   </div>
@@ -119,7 +117,6 @@
 // ========== CẤU HÌNH ==========
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxO2dgiHOGiWS880ghwHWimdL7oQ20jhTGAH0mKB-otFcm9J0zsL--_OId8CrqLIXl/exec";
 const ID_TEMPLATE_BB1 = "1Gj1PDFAHWeKG_2PCod4dLKHvXxq5xf6u";
-const ID_TEMPLATE_BB2 = "1AN9tE1UvR1KV3YNcs5P9RFxmcnsxwkBd";
 const DS_NV = ["Nguyễn Hữu Kính", "Hoàng Trần Quản Trọng", "Ngô Văn Quang", "Trần Văn Hoàng", "Kim Văn Quỳnh", "Hồ Văn Huy", "Lê Hữu Anh", "Trần Phúc Linh", "Tạ Quốc Đạt", "Võ Ngọc Sơn", "Nguyễn Xuân Khánh", "Đoàn Hoàng Quang Định", "Võ Văn Sỹ", "Lưu Đức Minh", "Nguyễn Hữu Đạt", "Nguyễn Mạnh Hoà"];
 
 // ========== STATE ==========
@@ -219,7 +216,6 @@ function restoreLocal() {
   } catch(e) { console.warn(e); }
 }
 
-// Tự động lưu khi thay đổi
 document.addEventListener('DOMContentLoaded', () => {
   ['chiHuy','stt','noiDung','diaDiem','startBB1','startBB2'].forEach(id => {
     const el = document.getElementById(id);
@@ -255,8 +251,7 @@ function updateDiaDiemSuggestions() {
   });
 }
 
-
-// Hàm lấy template bằng JSONP (không bị chặn trên mobile)
+// ========== JSONP: LẤY TEMPLATE ==========
 function getTemplateJSONP(fileId) {
   return new Promise((resolve, reject) => {
     const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -283,9 +278,38 @@ function getTemplateJSONP(fileId) {
     
     document.body.appendChild(script);
   });
-} 
-// ========== XUẤT FILE ==========
-// ========== XUẤT FILE ==========
+}
+
+// ========== JSONP: LOAD PHOBIEN ==========
+function loadPhobienJSONP() {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'jsonp_load_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      const script = document.getElementById(callbackName);
+      if (script) document.body.removeChild(script);
+      
+      if (data.error) reject(new Error(data.error));
+      else resolve(data.phobien || []);
+    };
+
+    const script = document.createElement('script');
+    script.id = callbackName;
+    script.src = `${WEB_APP_URL}?action=loadPhobien&callback=${callbackName}`;
+    
+    script.onerror = function() {
+      delete window[callbackName];
+      const s = document.getElementById(callbackName);
+      if (s) document.body.removeChild(s);
+      reject(new Error("Không thể tải dữ liệu từ Sheet"));
+    };
+    
+    document.body.appendChild(script);
+  });
+}
+
+// ========== XUẤT FILE + LƯU SHEET ==========
 async function xuatFile() {
   const noiDungRaw = document.getElementById('noiDung').value;
   const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
@@ -327,7 +351,7 @@ async function xuatFile() {
   };
 
   try {
-    // Xuất BB1 (dùng JSONP)
+    // Xuất file Word
     const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
     const binary1 = window.atob(base64_1);
     const bytes1 = new Uint8Array(binary1.length);
@@ -335,19 +359,9 @@ async function xuatFile() {
     const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
     doc1.render(data);
     const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    saveAs(blob1, `${stt}. Pho bien truoc cong tac.docx`);
+    saveAs(blob1, `${stt}. Pho bien.docx`);
 
-    // Xuất BB2 (dùng JSONP)
-    // const base64_2 = await getTemplateJSONP(ID_TEMPLATE_BB2);
-    // const binary2 = window.atob(base64_2);
-    // const bytes2 = new Uint8Array(binary2.length);
-    // for (let i = 0; i < binary2.length; i++) bytes2[i] = binary2.charCodeAt(i);
-    // const doc2 = new window.docxtemplater(new PizZip(bytes2.buffer), { paragraphLoop: true, linebreaks: true });
-    // doc2.render(data);
-    // const blob2 = doc2.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    // saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);
-
-    // Lưu local + Sheet
+    // Lưu local
     const item = {
       id: genId(),
       ngayTao: new Date().toLocaleString('vi-VN'),
@@ -363,18 +377,48 @@ async function xuatFile() {
     dbPhobien.items.push(item);
     localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
 
-    // Gọi API lưu Sheet
-    guiLenSheet(item);
-
-    alert("✅ Đã xuất 2 biên bản và lưu!");
-    
-    document.getElementById("loading").style.display = "none";
-    switchTab(1);
+    // Lưu lên Sheet (1 dòng duy nhất)
+    guiLenSheet(item, () => {
+      alert("✅ Đã xuất file và lưu lên Sheet!");
+      document.getElementById("loading").style.display = "none";
+      switchTab(1);
+    });
   } catch (e) {
     alert("Lỗi: " + e.message);
     document.getElementById("loading").style.display = "none";
   }
 }
+
+// ========== GỬI LÊN SHEET (form ẩn) ==========
+function guiLenSheet(item, callback) {
+  let iframeName = 'hidden_iframe_' + Date.now();
+  let iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  let form = document.createElement('form');
+  form.method = 'POST';
+  form.action = WEB_APP_URL + '?action=savePhobien';
+  form.target = iframeName;
+  form.style.display = 'none';
+
+  let input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'data';
+  input.value = JSON.stringify(item);
+  form.appendChild(input);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  setTimeout(() => {
+    if (document.body.contains(form)) document.body.removeChild(form);
+    if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    if (callback) callback();
+  }, 4000);
+}
+
 // ========== DANH SÁCH ==========
 function renderLocThang() {
   const sel = document.getElementById('locThang');
@@ -420,7 +464,6 @@ function renderDanhSach() {
       <div class="info">📍 ${item.diaDiem || ''}</div>
       <div class="actions">
         <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">📝 Load vào form</button>
-        <button class="btn-sm btn-red" onclick="xoaItem('${item.id}')">🗑️ Xóa (local)</button>
       </div>
     </div>
   `).join('');
@@ -433,7 +476,6 @@ function loadVaoForm(id) {
   document.getElementById('stt').value = item.stt;
   document.getElementById('noiDung').value = item.noiDung;
   document.getElementById('diaDiem').value = item.diaDiem;
-  // Parse ngày từ chuỗi
   const parseDT = (str) => {
     const m = str.match(/(\d{2}) giờ (\d{2}) ngày (\d{2})\/(\d{2})\/(\d{4})/);
     if (!m) return '';
@@ -448,55 +490,30 @@ function loadVaoForm(id) {
   window.scrollTo(0, 0);
 }
 
-function xoaItem(id) {
-  if (!confirm("Xóa biên bản này khỏi danh sách local? (Không xóa trên Google Sheet)")) return;
-  dbPhobien.items = dbPhobien.items.filter(x => x.id !== id);
-  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
-  renderLocThang();
-  renderDanhSach();
-}
-
-function luuLenSheet() {
-  if (dbPhobien.items.length === 0) { alert("Chưa có dữ liệu!"); return; }
-  if (!confirm(`Lưu ${dbPhobien.items.length} biên bản lên Sheet?`)) return;
-  document.getElementById('loading').style.display = 'flex';
-  
-  let done = 0;
-  dbPhobien.items.forEach((item, idx) => {
-    setTimeout(() => {
-      guiLenSheet(item, () => {
-        done++;
-        if (done === dbPhobien.items.length) {
-          document.getElementById('loading').style.display = 'none';
-          alert("✅ Đã lưu tất cả lên Sheet!");
-        }
-      });
-    }, idx * 800);  // Giãn cách 0.8s để tránh bị chặn
-  });
-}
-
- 
+// ========== TẢI TỪ SHEET (dùng JSONP) ==========
 async function taiTuSheet() {
   document.getElementById('loading').style.display = 'flex';
   try {
-    const res = await fetch(`${WEB_APP_URL}?action=loadPhobien`);
-    const result = await res.json();
-    if (result.phobien && result.phobien.length > 0) {
-      // Merge: giữ local, thêm những cái chưa có
+    const list = await loadPhobienJSONP();
+    if (list && list.length > 0) {
       const existingIds = new Set(dbPhobien.items.map(x => x.id));
-      result.phobien.forEach(item => {
+      let added = 0;
+      list.forEach(item => {
         if (!existingIds.has(item.id)) {
           dbPhobien.items.push(item);
+          added++;
         }
       });
       localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
       renderLocThang();
       renderDanhSach();
-      alert(`✅ Đã tải ${result.phobien.length} biên bản từ Sheet!`);
+      alert(`✅ Đã tải ${list.length} biên bản từ Sheet (thêm mới ${added}).`);
     } else {
       alert("Sheet chưa có dữ liệu.");
     }
-  } catch (e) { alert("Lỗi tải: " + e.message); }
+  } catch (e) {
+    alert("Lỗi tải: " + e.message);
+  }
   document.getElementById('loading').style.display = 'none';
 }
 
@@ -504,91 +521,11 @@ async function taiTuSheet() {
 window.onload = function() {
   renderChips();
   restoreLocal();
-  // Set default time
   const now = new Date();
   const defaultDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   if (!document.getElementById('startBB1').value) document.getElementById('startBB1').value = defaultDate;
   if (!document.getElementById('startBB2').value) document.getElementById('startBB2').value = defaultDate;
 };
- // Gửi dữ liệu lên Sheet bằng form ẩn (không bị CORS chặn)
-function guiLenSheet(item, callback) {
-  // Tạo iframe ẩn để nhận kết quả
-  let iframeName = 'hidden_iframe_' + Date.now();
-  let iframe = document.createElement('iframe');
-  iframe.name = iframeName;
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  // Tạo form ẩn
-  let form = document.createElement('form');
-  form.method = 'POST';
-  form.action = WEB_APP_URL + '?action=savePhobien';
-  form.target = iframeName;
-  form.style.display = 'none';
-
-  // Thêm dữ liệu
-  let input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'data';
-  input.value = JSON.stringify(item);
-  form.appendChild(input);
-
-  document.body.appendChild(form);
-  form.submit();
-
-  // Dọn dẹp sau 5s
-  setTimeout(() => {
-    document.body.removeChild(form);
-    document.body.removeChild(iframe);
-    if (callback) callback();
-  }, 5000);
-}
-
-// Nút "Lưu lên Sheet" ở tab Nhập
-function luuNhanh() {
-  const noiDungRaw = document.getElementById('noiDung').value;
-  const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
-  const start1 = document.getElementById('startBB1').value;
-  const start2 = document.getElementById('startBB2').value;
-  const stt = document.getElementById('stt').value.trim();
-  const chiHuy = document.getElementById('chiHuy').value;
-  const diaDiem = document.getElementById('diaDiem').value.trim();
-
-  if (!noiDung || !start1 || !start2 || !stt) {
-    alert("Vui lòng điền đủ thông tin!");
-    return;
-  }
-  if (nguoiTam.length === 0) {
-    alert("Chọn ít nhất 1 nhân viên!");
-    return;
-  }
-
-  const item = {
-    id: genId(),
-    ngayTao: new Date().toLocaleString('vi-VN'),
-    stt: stt,
-    chiHuy: chiHuy,
-    nhanVien: [...nguoiTam],
-    noiDung: noiDungRaw,
-    diaDiem: diaDiem,
-    timePATC: formatDT(start1),
-    timeHienTruong: formatDT(start2),
-    thoiGianTao: new Date().toISOString()
-  };
-
-  // Lưu local trước
-  dbPhobien.items.push(item);
-  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
-
-  // Gửi lên Sheet
-  document.getElementById('loading').style.display = 'flex';
-  guiLenSheet(item, () => {
-    document.getElementById('loading').style.display = 'none';
-    alert("✅ Đã lưu lên Sheet!");
-    renderLocThang();
-    renderDanhSach();
-  });
-}
 </script>
 </body>
 </html>
