@@ -421,8 +421,11 @@ function hienThiChiTietCT() {
                   <tr>
                     <td>${i+1}</td>
                     <td>${displayName(ten)}</td>
-                    <td><input type="text" inputmode="decimal" class="money-input" value="${val}" 
-  oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"></td>
+                    
+<td><input type="text" inputmode="tel" class="money-input" value="${val}" 
+  oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"
+  onblur="xuLyBlurTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this)"></td>
+  
                     <td><button class="btn-sm btn-red" onclick="xoaNguoiHD('${hd.id}','${ten.replace(/'/g,"\\'")}')">✖</button></td>
                   </tr>
                   `;
@@ -503,7 +506,7 @@ function renderBangNhapTien() {
     <tr>
       <td>${i+1}</td>
       <td>${displayName(ten)}</td>
-<td><input type="text" inputmode="decimal" class="money-input" id="tam_${i}" value="" placeholder=""></td>
+<td><input type="text" inputmode="tel" class="money-input" id="tam_${i}" value="" placeholder=""></td>
 </tr>
   `).join('');
 }
@@ -534,23 +537,59 @@ hdNguoiTam.forEach((ten, i) => {
   autoSave();
 }
 
+// Khi đang gõ - chỉ lưu tạm
 function capNhatTien(hdId, ten, val) {
   if (!ctDangChon) return;
   const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
   if (!hd) return;
-  // Xử lý phép chia nếu nhập dạng "150/3"
-  const ketQua = xuLyPhepChia(val);
-  hd.soTien[ten] = ketQua === '' ? '' : Number(ketQua);
+  
+  // Nếu đang gõ có dấu "/" -> lưu tạm dạng string, chưa tính
+  if (val.includes('/')) {
+    hd.soTien[ten] = val;
+    luuLocal();
+    return;
+  }
+  
+  // Nếu là số bình thường -> lưu số
+  hd.soTien[ten] = val === '' ? '' : (Number(val) || 0);
   luuLocal();
+  capNhatTongHD(hdId);
+  autoSave();
+}
+
+// Khi rời ô - xử lý phép chia
+function xuLyBlurTien(hdId, ten, el) {
+  const val = el.value.trim();
+  if (val.includes('/')) {
+    const ketQua = xuLyPhepChia(val);
+    if (ketQua !== '') {
+      const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
+      if (hd) {
+        hd.soTien[ten] = Number(ketQua);
+        el.value = ketQua;
+        capNhatTongHD(hdId);
+        luuLocal();
+        autoSave();
+      }
+    }
+  }
+}
+
+// Hàm cập nhật tổng hoạt động
+function capNhatTongHD(hdId) {
+  if (!ctDangChon) return;
+  const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
+  if (!hd) return;
   let tongHD = 0;
   hd.nguoi.forEach(n => {
     const v = hd.soTien[n];
-    if (v !== '' && v !== undefined && v !== null) tongHD += Number(v) || 0;
+    if (v !== '' && v !== undefined && v !== null && !String(v).includes('/')) {
+      tongHD += Number(v) || 0;
+    }
   });
   const el = document.querySelector(`.hd-tong[data-hdid="${hdId}"]`);
   if (el) el.innerText = formatMoney(tongHD) + ' đ';
-  autoSave();
-}
+    }
 
 function copyTuNguoiDau(hdId) {
   if (!ctDangChon) return;
