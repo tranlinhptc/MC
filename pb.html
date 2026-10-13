@@ -93,8 +93,8 @@
       <label>Time Hiện trường:</label>
       <input type="datetime-local" id="startBB2">
     </div>
-    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất 2 biên bản</button>
-    <button class="btn-orange btn-block" onclick="luuNhanh()" style="margin-top:6px;">💾 Lưu lên Sheet</button>
+    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất biên bản</button>
+    <button class="btn-orange btn-block" onclick="luuNhanh()" style="margin-top:6px;">💾 Lưu</button>
   </div>
 
   <!-- TAB 2: DANH SÁCH -->
@@ -106,8 +106,8 @@
       </select>
     </div>
     <div class="toolbar">
-      <button class="btn-gray" onclick="taiTuSheet()">🔄 Tải từ Sheet</button>
-      <button class="btn-orange" onclick="luuLenSheet()">💾 Lưu lên Sheet</button>
+      <button class="btn-gray" onclick="taiTuSheet()">🔄 Lịch sử</button>
+      <!--button class="btn-orange" onclick="luuLenSheet()">💾 Lưu lên Sheet</button>-->
     </div>
     <div id="danhSachBB"></div>
   </div>
@@ -338,14 +338,14 @@ async function xuatFile() {
     saveAs(blob1, `${stt}. Pho bien truoc cong tac.docx`);
 
     // Xuất BB2 (dùng JSONP)
-    const base64_2 = await getTemplateJSONP(ID_TEMPLATE_BB2);
-    const binary2 = window.atob(base64_2);
-    const bytes2 = new Uint8Array(binary2.length);
-    for (let i = 0; i < binary2.length; i++) bytes2[i] = binary2.charCodeAt(i);
-    const doc2 = new window.docxtemplater(new PizZip(bytes2.buffer), { paragraphLoop: true, linebreaks: true });
-    doc2.render(data);
-    const blob2 = doc2.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);
+    // const base64_2 = await getTemplateJSONP(ID_TEMPLATE_BB2);
+    // const binary2 = window.atob(base64_2);
+    // const bytes2 = new Uint8Array(binary2.length);
+    // for (let i = 0; i < binary2.length; i++) bytes2[i] = binary2.charCodeAt(i);
+    // const doc2 = new window.docxtemplater(new PizZip(bytes2.buffer), { paragraphLoop: true, linebreaks: true });
+    // doc2.render(data);
+    // const blob2 = doc2.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    // saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);
 
     // Lưu local + Sheet
     const item = {
