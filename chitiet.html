@@ -147,23 +147,7 @@
 
 <script>
 
- function xuLyPhepChia(val) {
-  // Nếu val có dạng "a/b" -> trả về a/b, ngược lại trả về số bình thường
-  if (typeof val === 'string' && val.includes('/')) {
-    const parts = val.split('/');
-    if (parts.length === 2) {
-      const tu = parseFloat(parts[0]);
-      const mau = parseFloat(parts[1]);
-      if (!isNaN(tu) && !isNaN(mau) && mau !== 0) {
-        return Math.round(tu / mau * 100) / 100; // Làm tròn 2 chữ số
-      }
-    }
-  }
-  // Nếu là số bình thường
-  if (val === '' || val === null || val === undefined) return '';
-  const n = parseFloat(val);
-  return isNaN(n) ? '' : n;
- }
+ 
  
 // ========== CẤU HÌNH ==========
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNy9XraPEoGZdIEkvJ2Vm1RKjkvB9Q2V1KP6MugkiRuca3Y9ivNA7zOPqJHrB6aZLG/exec";
@@ -203,6 +187,23 @@ function formatMoney(n) {
   if (n === '' || n === null || n === undefined) return '';
   return Number(n).toLocaleString('vi-VN'); 
 }
+ function xuLyPhepChia(val) {
+  // Nếu val có dạng "a/b" -> trả về a/b, ngược lại trả về số bình thường
+  if (typeof val === 'string' && val.includes('/')) {
+    const parts = val.split('/');
+    if (parts.length === 2) {
+      const tu = parseFloat(parts[0]);
+      const mau = parseFloat(parts[1]);
+      if (!isNaN(tu) && !isNaN(mau) && mau !== 0) {
+        return Math.round(tu / mau * 100) / 100; // Làm tròn 2 chữ số
+      }
+    }
+  }
+  // Nếu là số bình thường
+  if (val === '' || val === null || val === undefined) return '';
+  const n = parseFloat(val);
+  return isNaN(n) ? '' : n;
+ }
 function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
 
 function formatDateDisplay(iso) {
