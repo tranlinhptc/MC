@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Biên Bản Công Tác</title>
+<title>Biên Bản </title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
@@ -12,43 +12,46 @@
   body { background: #f0f2f5; margin: 0; padding: 10px; }
   .container { max-width: 100%; background: #fff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
   h1 { color: #c00; text-align: center; font-size: 20px; margin: 0 0 10px; text-transform: uppercase; }
-  h3 { color: #0056b3; border-bottom: 2px solid #007bff; padding-bottom: 4px; margin: 15px 0 8px; font-size: 15px; }
-
+  
   .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
-  .tab-btn { flex: 1; padding: 10px; background: #e9ecef; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+  .tab-btn { flex: 1; padding: 10px; background: #e9ecef; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.3s;}
   .tab-btn.active { background: #007bff; color: #fff; }
   .tab-content { display: none; }
-  .tab-content.active { display: block; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  .form-group { margin-bottom: 10px; }
-  label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 3px; color: #c00; }
-  input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+  .form-group { margin-bottom: 12px; }
+  label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px; color: #333; }
+  input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
   textarea { resize: vertical; min-height: 80px; }
+  
   button { background: #28a745; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin: 2px 0; }
-  .btn-blue { background: #007bff; } .btn-red { background: #dc3545; } .btn-orange { background: #fd7e14; } .btn-gray { background: #6c757d; }
-  .btn-sm { padding: 5px 10px; font-size: 11px; width: auto; }
-  .btn-block { display: block; width: 100%; }
+  .btn-blue { background: #007bff; } .btn-red { background: #dc3545; } .btn-gray { background: #6c757d; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; margin-right: 5px; }
+  .btn-block { display: block; width: 100%; font-size: 15px; padding: 12px; }
 
-  .chip-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 5px 0; }
-  .chip { padding: 8px 4px; border-radius: 15px; border: 2px solid #ccc; background: #f4f4f4; color: #666; font-size: 11px; cursor: pointer; text-align: center; font-weight: normal; }
+  .chip-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; margin: 5px 0; }
+  .chip { padding: 8px 4px; border-radius: 15px; border: 1px solid #ccc; background: #f8f9fa; color: #555; font-size: 11px; cursor: pointer; text-align: center; user-select: none; transition: 0.2s;}
   .chip.selected { background: #007bff; color: #fff; border-color: #007bff; font-weight: bold; }
 
-  .bb-item { border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 8px; background: #fafafa; }
-  .bb-item h4 { margin: 0 0 5px; color: #0056b3; font-size: 14px; }
-  .bb-item .info { font-size: 12px; color: #666; }
-  .bb-item .actions { margin-top: 5px; }
-
-  #loading { display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(255,255,255,0.9); align-items: center; justify-content: center; color: #007bff; font-weight: bold; font-size: 18px; }
-  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .bb-item { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fafafa; }
+  .bb-item h4 { margin: 0 0 8px; color: #0056b3; font-size: 15px; }
+  .bb-item .info { font-size: 12px; color: #666; margin-bottom: 8px; }
+  
+  #loading { display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(255,255,255,0.85); align-items: center; justify-content: center; flex-direction: column; color: #007bff; font-weight: bold; font-size: 16px; }
+  .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  
+  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; }
   .toolbar button { flex: 1; min-width: 100px; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>📋 BIÊN BẢN</h1>
+  <h1>📋 BIÊN BẢN CÔNG TÁC</h1>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(0)">📝 Nhập biên bản</button>
+    <button class="tab-btn active" onclick="switchTab(0)">📝 Nhập liệu</button>
     <button class="tab-btn" onclick="switchTab(1)">📚 Danh sách</button>
   </div>
 
@@ -74,11 +77,11 @@
     </div>
     <div class="form-group">
       <label>Số GĐKCT:</label>
-      <input type="text" id="stt" placeholder="Số GĐKCT...">
+      <input type="text" id="stt" placeholder="Ví dụ: 123/GĐKCT">
     </div>
     <div class="form-group">
-      <label>Nội dung:</label>
-      <textarea id="noiDung" placeholder="Nội dung..."></textarea>
+      <label>Nội dung công tác:</label>
+      <textarea id="noiDung" placeholder="Nhập nội dung công việc..."></textarea>
     </div>
     <div class="form-group">
       <label>Địa điểm:</label>
@@ -86,14 +89,14 @@
       <datalist id="diaDiemSuggestions"></datalist>
     </div>
     <div class="form-group">
-      <label>Time PATC:</label>
+      <label>Thời gian PATC:</label>
       <input type="datetime-local" id="startBB1">
     </div>
     <div class="form-group">
-      <label>Time Hiện trường:</label>
+      <label>Thời gian Phổ biến tại hiện trường:</label>
       <input type="datetime-local" id="startBB2">
     </div>
-    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất & Lưu biên bản</button>
+    <button class="btn-blue btn-block" onclick="xuatFile()">📄 TẠO BIÊN BẢN & LƯU</button>
   </div>
 
   <!-- TAB 2: DANH SÁCH -->
@@ -105,29 +108,32 @@
       </select>
     </div>
     <div class="toolbar">
-      <button class="btn-gray" onclick="taiTuSheet()">🔄 Lịch sử từ Sheet</button>
+      <button class="btn-gray" onclick="taiTuSheet()">🔄 Đồng bộ từ Google Sheet</button>
     </div>
     <div id="danhSachBB"></div>
   </div>
 </div>
 
-<div id="loading">⏳ Đang xử lý...</div>
+<div id="loading">
+  <div class="spinner"></div>
+  <span id="loadingText">Đang xử lý...</span>
+</div>
 
 <script>
 // ========== CẤU HÌNH ==========
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxO2dgiHOGiWS880ghwHWimdL7oQ20jhTGAH0mKB-otFcm9J0zsL--_OId8CrqLIXl/exec";
+// ANH CẦN THAY LINK WEB APP MỚI SAU KHI DEPLOY LẠI CODE.GS
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxO2dgiHOGiWS880ghwHWimdL7oQ20jhTGAH0mKB-otFcm9J0zsL--_OId8CrqLIXl/exec"; 
 const ID_TEMPLATE_BB1 = "1Gj1PDFAHWeKG_2PCod4dLKHvXxq5xf6u";
 const DS_NV = ["Nguyễn Hữu Kính", "Hoàng Trần Quản Trọng", "Ngô Văn Quang", "Trần Văn Hoàng", "Kim Văn Quỳnh", "Hồ Văn Huy", "Lê Hữu Anh", "Trần Phúc Linh", "Tạ Quốc Đạt", "Võ Ngọc Sơn", "Nguyễn Xuân Khánh", "Đoàn Hoàng Quang Định", "Võ Văn Sỹ", "Lưu Đức Minh", "Nguyễn Hữu Đạt", "Nguyễn Mạnh Hoà"];
 
 // ========== STATE ==========
 let dbPhobien = JSON.parse(localStorage.getItem('db_phobien') || '{"items":[]}');
 if (!dbPhobien.items) dbPhobien.items = [];
-
 let nguoiTam = [];
 
 // ========== HELPERS ==========
 function getShortName(full) {
-  const p = full.split(' ');
+  const p = full.trim().split(' ');
   let ten = p[p.length - 1];
   if (ten === "Đạt") {
     if (full.includes("Tạ")) ten = "Đạt (TQ)";
@@ -139,28 +145,31 @@ function displayName(full) { return "Mr." + getShortName(full); }
 function genId() { return 'pb_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
 
 function formatDT(s) {
+  if(!s) return "";
   let d = new Date(s);
-  let h = ('0' + d.getHours()).slice(-2);
-  let m = ('0' + d.getMinutes()).slice(-2);
-  let day = ('0' + d.getDate()).slice(-2);
-  let month = ('0' + (d.getMonth() + 1)).slice(-2);
-  let year = d.getFullYear();
-  return `${h} giờ ${m} ngày ${day}/${month}/${year}`;
+  return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)} ngày ${('0'+d.getDate()).slice(-2)}/${('0'+(d.getMonth() + 1)).slice(-2)}/${d.getFullYear()}`;
 }
 function formatTime(d) {
-  let h = ('0' + d.getHours()).slice(-2);
-  let m = ('0' + d.getMinutes()).slice(-2);
-  return `${h} giờ ${m}`;
+  return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)}`;
 }
 function formatDate(s) {
+  if(!s) return "";
   let d = new Date(s);
-  let day = ('0' + d.getDate()).slice(-2);
-  let month = ('0' + (d.getMonth() + 1)).slice(-2);
-  let year = d.getFullYear();
-  return `ngày ${day} tháng ${month} năm ${year}`;
+  return `ngày ${('0'+d.getDate()).slice(-2)} tháng ${('0'+(d.getMonth() + 1)).slice(-2)} năm ${d.getFullYear()}`;
 }
 
-// ========== TAB ==========
+// ========== TẢI FILE ==========
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
+}
+
+// ========== TAB & UI ==========
 function switchTab(idx) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
   document.querySelectorAll('.tab-content').forEach((c,i) => c.classList.toggle('active', i===idx));
@@ -170,7 +179,6 @@ function switchTab(idx) {
   }
 }
 
-// ========== FORM ==========
 function renderChips() {
   const container = document.getElementById('nvContainer');
   container.innerHTML = DS_NV.map(nv => {
@@ -178,6 +186,7 @@ function renderChips() {
     return `<div class="chip ${sel}" onclick="toggleNguoi('${nv.replace(/'/g,"\\'")}')">${displayName(nv)}</div>`;
   }).join('');
 }
+
 function toggleNguoi(ten) {
   if (nguoiTam.includes(ten)) nguoiTam = nguoiTam.filter(n => n !== ten);
   else nguoiTam.push(ten);
@@ -185,6 +194,7 @@ function toggleNguoi(ten) {
   saveLocal();
 }
 
+// ========== LOCAL STORAGE ==========
 function saveLocal() {
   const data = {
     chiHuy: document.getElementById('chiHuy').value,
@@ -199,144 +209,95 @@ function saveLocal() {
 }
 
 function restoreLocal() {
-  const saved = localStorage.getItem('bienBanData');
-  if (!saved) return;
   try {
+    const saved = localStorage.getItem('bienBanData');
+    if (!saved) return;
     const data = JSON.parse(saved);
-    if (data.chiHuy) document.getElementById('chiHuy').value = data.chiHuy;
-    if (data.stt) document.getElementById('stt').value = data.stt;
-    if (data.noiDung) document.getElementById('noiDung').value = data.noiDung;
-    if (data.diaDiem) document.getElementById('diaDiem').value = data.diaDiem;
-    if (data.startBB1) document.getElementById('startBB1').value = data.startBB1;
-    if (data.startBB2) document.getElementById('startBB2').value = data.startBB2;
-    if (data.nhanVien && Array.isArray(data.nhanVien)) {
-      nguoiTam = [...data.nhanVien];
-      renderChips();
-    }
-  } catch(e) { console.warn(e); }
+    ['chiHuy','stt','noiDung','diaDiem','startBB1','startBB2'].forEach(id => {
+      if(data[id]) document.getElementById(id).value = data[id];
+    });
+    if (data.nhanVien && Array.isArray(data.nhanVien)) nguoiTam = [...data.nhanVien];
+  } catch(e) {}
 }
 
+// Lắng nghe sự kiện lưu nháp
 document.addEventListener('DOMContentLoaded', () => {
   ['chiHuy','stt','noiDung','diaDiem','startBB1','startBB2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', saveLocal);
-    if (el) el.addEventListener('change', saveLocal);
+    document.getElementById(id)?.addEventListener('input', saveLocal);
   });
-  const noiDung = document.getElementById('noiDung');
-  noiDung.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = this.scrollHeight + 'px';
-    updateDiaDiemSuggestions();
-  });
-  document.getElementById('diaDiem').addEventListener('input', updateDiaDiemSuggestions);
 });
 
-function updateDiaDiemSuggestions() {
-  const noiDung = document.getElementById('noiDung').value;
-  const datalist = document.getElementById('diaDiemSuggestions');
-  datalist.innerHTML = '';
-  if (!noiDung.trim()) return;
-  const lines = noiDung.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const suggestions = new Set();
-  lines.forEach(line => {
-    const match = line.match(/^(?:tại|ở|địa điểm|nơi)\s+(.+)/i);
-    if (match) suggestions.add(match[1].trim());
-    else if (line.includes(',')) suggestions.add(line);
-    else if (line.length > 5 && line.length < 100 && !line.includes(':')) suggestions.add(line);
-  });
-  suggestions.forEach(s => {
-    const option = document.createElement('option');
-    option.value = s;
-    datalist.appendChild(option);
-  });
-}
-
-// ========== JSONP: LẤY TEMPLATE ==========
+// ========== KẾT NỐI SERVER (JSONP & NO-CORS) ==========
 function getTemplateJSONP(fileId) {
   return new Promise((resolve, reject) => {
-    const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    
+    const callbackName = 'jsonp_cb_' + Date.now();
     window[callbackName] = function(data) {
       delete window[callbackName];
-      const script = document.getElementById(callbackName);
-      if (script) document.body.removeChild(script);
-      
-      if (data.error) reject(new Error(data.error));
-      else resolve(data.base64);
+      document.getElementById(callbackName)?.remove();
+      if (data.error) reject(new Error(data.error)); else resolve(data.base64);
     };
-
     const script = document.createElement('script');
     script.id = callbackName;
     script.src = `${WEB_APP_URL}?action=getTemplate&fileId=${fileId}&callback=${callbackName}`;
-    
-    script.onerror = function() {
-      delete window[callbackName];
-      const s = document.getElementById(callbackName);
-      if (s) document.body.removeChild(s);
-      reject(new Error("Không thể tải template từ Google Drive"));
-    };
-    
+    script.onerror = () => reject(new Error("Lỗi mạng khi tải Template"));
     document.body.appendChild(script);
   });
 }
 
-// ========== JSONP: LOAD PHOBIEN ==========
 function loadPhobienJSONP() {
   return new Promise((resolve, reject) => {
-    const callbackName = 'jsonp_load_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    
+    const callbackName = 'jsonp_load_' + Date.now();
     window[callbackName] = function(data) {
       delete window[callbackName];
-      const script = document.getElementById(callbackName);
-      if (script) document.body.removeChild(script);
-      
-      if (data.error) reject(new Error(data.error));
-      else resolve(data.phobien || []);
+      document.getElementById(callbackName)?.remove();
+      if (data.error) reject(new Error(data.error)); else resolve(data.phobien || []);
     };
-
     const script = document.createElement('script');
     script.id = callbackName;
     script.src = `${WEB_APP_URL}?action=loadPhobien&callback=${callbackName}`;
-    
-    script.onerror = function() {
-      delete window[callbackName];
-      const s = document.getElementById(callbackName);
-      if (s) document.body.removeChild(s);
-      reject(new Error("Không thể tải dữ liệu từ Sheet"));
-    };
-    
+    script.onerror = () => reject(new Error("Lỗi mạng khi tải dữ liệu từ Sheet"));
     document.body.appendChild(script);
   });
 }
 
-// ========== XUẤT FILE + LƯU SHEET ==========
+function guiLenSheet(item, callback) {
+  const params = new URLSearchParams();
+  params.append('data', JSON.stringify(item));
+  
+  fetch(`${WEB_APP_URL}?action=savePhobien`, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  }).then(() => callback(true)).catch(() => callback(false));
+}
+
+// ========== XỬ LÝ CHÍNH ==========
+function showLoading(text) {
+  document.getElementById("loadingText").innerText = text;
+  document.getElementById("loading").style.display = "flex";
+}
+function hideLoading() {
+  document.getElementById("loading").style.display = "none";
+}
+
 async function xuatFile() {
-  const noiDungRaw = document.getElementById('noiDung').value;
-  const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
+  const stt = document.getElementById('stt').value.trim();
+  const noiDung = document.getElementById('noiDung').value.replace(/\n/g, ' ').trim();
   const start1 = document.getElementById('startBB1').value;
   const start2 = document.getElementById('startBB2').value;
-  const stt = document.getElementById('stt').value.trim();
   const chiHuy = document.getElementById('chiHuy').value;
   const diaDiem = document.getElementById('diaDiem').value.trim();
 
-  if (!noiDung || !start1 || !start2) {
-    alert("Vui lòng điền đủ thông tin!");
-    return;
-  }
-  if (nguoiTam.length === 0) {
-    alert("Chọn ít nhất 1 nhân viên!");
-    return;
-  }
-  if (!stt) {
-    alert("Nhập số GĐKCT!");
+  if (!stt || !noiDung || !start1 || !start2 || nguoiTam.length === 0) {
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
     return;
   }
 
-  document.getElementById("loading").style.display = "flex";
+  showLoading("Đang tạo file Word...");
 
   let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung }));
-
-  let data = {
+  let dataToRender = {
     stt: stt,
     nguoi_chu_tri: chiHuy,
     tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
@@ -351,24 +312,25 @@ async function xuatFile() {
   };
 
   try {
-    // Xuất file Word
-    const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
-    const binary1 = window.atob(base64_1);
-    const bytes1 = new Uint8Array(binary1.length);
-    for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
-    const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
-    doc1.render(data);
-    const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    saveAs(blob1, `${stt}. Pho bien.docx`);
+    // 1. Render Word
+    const base64 = await getTemplateJSONP(ID_TEMPLATE_BB1);
+    const binary = window.atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const doc = new window.docxtemplater(new PizZip(bytes.buffer), { paragraphLoop: true, linebreaks: true });
+    doc.render(dataToRender);
+    const blob = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    downloadBlob(blob, `BB_PATC_${stt}.docx`);
 
-    // Lưu local
+    // 2. Lưu Local
+    showLoading("Đang đồng bộ lên Google Sheet...");
     const item = {
       id: genId(),
       ngayTao: new Date().toLocaleString('vi-VN'),
       stt: stt,
       chiHuy: chiHuy,
       nhanVien: [...nguoiTam],
-      noiDung: noiDungRaw,
+      noiDung: document.getElementById('noiDung').value, // Giữ nguyên xuống dòng để hiển thị lại UI
       diaDiem: diaDiem,
       timePATC: formatDT(start1),
       timeHienTruong: formatDT(start2),
@@ -377,52 +339,25 @@ async function xuatFile() {
     dbPhobien.items.push(item);
     localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
 
-    // Lưu lên Sheet (1 dòng duy nhất)
-    guiLenSheet(item, () => {
-      alert("✅ Đã xuất và lưu!");
-      document.getElementById("loading").style.display = "none";
-      switchTab(1);
+    // 3. Đẩy lên Sheet
+    guiLenSheet(item, (ok) => {
+      hideLoading();
+      if (ok) {
+        alert("✅ Đã tạo biên bản và lưu lên Google Sheet!");
+        switchTab(1);
+      } else {
+        alert("⚠️ Đã tạo file Word nhưng mạng yếu chưa lưu lên Sheet được. Vui lòng ấn Đồng bộ sau.");
+      }
     });
   } catch (e) {
+    hideLoading();
     alert("Lỗi: " + e.message);
-    document.getElementById("loading").style.display = "none";
   }
 }
 
-// ========== GỬI LÊN SHEET (form ẩn) ==========
-function guiLenSheet(item, callback) {
-  let iframeName = 'hidden_iframe_' + Date.now();
-  let iframe = document.createElement('iframe');
-  iframe.name = iframeName;
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  let form = document.createElement('form');
-  form.method = 'POST';
-  form.action = WEB_APP_URL + '?action=savePhobien';
-  form.target = iframeName;
-  form.style.display = 'none';
-
-  let input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'data';
-  input.value = JSON.stringify(item);
-  form.appendChild(input);
-
-  document.body.appendChild(form);
-  form.submit();
-
-  setTimeout(() => {
-    if (document.body.contains(form)) document.body.removeChild(form);
-    if (document.body.contains(iframe)) document.body.removeChild(iframe);
-    if (callback) callback();
-  }, 4000);
-}
-
-// ========== DANH SÁCH ==========
+// ========== QUẢN LÝ DANH SÁCH ==========
 function renderLocThang() {
   const sel = document.getElementById('locThang');
-  const curVal = sel.value;
   const dsThang = new Set();
   dbPhobien.items.forEach(item => {
     if (item.timePATC) {
@@ -431,68 +366,81 @@ function renderLocThang() {
     }
   });
   const arr = [...dsThang].sort().reverse();
-  sel.innerHTML = '<option value="">-- Tất cả --</option>' +
-    arr.map(t => {
-      const [y, m] = t.split('-');
-      return `<option value="${t}">Tháng ${m}/${y}</option>`;
-    }).join('');
-  if (curVal) sel.value = curVal;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">-- Tất cả --</option>' + arr.map(t => {
+    const [y, m] = t.split('-');
+    return `<option value="${t}">Tháng ${m}/${y}</option>`;
+  }).join('');
+  if(currentVal) sel.value = currentVal;
 }
 
 function renderDanhSach() {
   const container = document.getElementById('danhSachBB');
   const thangLoc = document.getElementById('locThang').value;
   let list = dbPhobien.items;
+  
   if (thangLoc) {
     const [y, m] = thangLoc.split('-');
     list = list.filter(item => {
-      if (!item.timePATC) return false;
-      const match = item.timePATC.match(/ngày (\d{2})\/(\d{2})\/(\d{4})/);
-      if (!match) return false;
-      return match[2] === m && match[3] === y;
+      const match = item.timePATC?.match(/ngày (\d{2})\/(\d{2})\/(\d{4})/);
+      return match && match[2] === m && match[3] === y;
     });
   }
+  
+  // Sắp xếp mới nhất lên đầu
+  list.sort((a,b) => new Date(b.thoiGianTao) - new Date(a.thoiGianTao));
+
   if (list.length === 0) {
-    container.innerHTML = '<p style="color:#999;">Chưa có biên bản nào.</p>';
+    container.innerHTML = '<p style="color:#888; text-align:center; padding: 20px;">Không có biên bản nào lưu trên máy này.</p>';
     return;
   }
+  
   container.innerHTML = list.map(item => `
     <div class="bb-item">
-      <h4>📄 Số ${item.stt} - ${item.chiHuy}</h4>
-      <!--<div class="info">👥 ${item.nhanVien.map(displayName).join(', ')}</div>
-      //<div class="info">📅 PATC: ${item.timePATC || ''} | Hiện trường: ${item.timeHienTruong || ''}</div>
-      //<div class="info">📍 ${item.diaDiem || ''}</div> -->
+      <h4>📄 Số GĐKCT: ${item.stt}</h4>
+      <div class="info">👤 Chỉ huy: <b>${item.chiHuy}</b><br>📅 Ngày: ${item.timePATC}</div>
       <div class="actions">
-        <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">📝 Load vào form</button>
+        <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">✏️ Dùng lại mẫu này</button>
+        <button class="btn-sm btn-red" onclick="xoaLocal('${item.id}')">🗑 Xóa Local</button>
       </div>
     </div>
   `).join('');
 }
 
+// XÓA LOCAL: Chỉ xóa khỏi localStorage, không can thiệp server
+function xoaLocal(id) {
+  if(!confirm("Bạn có chắc muốn xóa biên bản này khỏi máy tính/điện thoại hiện tại?\n(Hành động này KHÔNG làm mất dữ liệu trên Google Sheet)")) return;
+  dbPhobien.items = dbPhobien.items.filter(x => x.id !== id);
+  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+  renderLocThang();
+  renderDanhSach();
+}
+
 function loadVaoForm(id) {
   const item = dbPhobien.items.find(x => x.id === id);
   if (!item) return;
-  document.getElementById('chiHuy').value = item.chiHuy;
-  document.getElementById('stt').value = item.stt;
-  document.getElementById('noiDung').value = item.noiDung;
-  document.getElementById('diaDiem').value = item.diaDiem;
+  document.getElementById('chiHuy').value = item.chiHuy || "";
+  document.getElementById('stt').value = item.stt || "";
+  document.getElementById('noiDung').value = item.noiDung || "";
+  document.getElementById('diaDiem').value = item.diaDiem || "";
+  
   const parseDT = (str) => {
+    if(!str) return '';
     const m = str.match(/(\d{2}) giờ (\d{2}) ngày (\d{2})\/(\d{2})\/(\d{4})/);
-    if (!m) return '';
-    return `${m[5]}-${m[4]}-${m[3]}T${m[1]}:${m[2]}`;
+    return m ? `${m[5]}-${m[4]}-${m[3]}T${m[1]}:${m[2]}` : '';
   };
-  document.getElementById('startBB1').value = parseDT(item.timePATC) || '';
-  document.getElementById('startBB2').value = parseDT(item.timeHienTruong) || '';
-  nguoiTam = [...item.nhanVien];
+  document.getElementById('startBB1').value = parseDT(item.timePATC);
+  document.getElementById('startBB2').value = parseDT(item.timeHienTruong);
+  
+  nguoiTam = Array.isArray(item.nhanVien) ? [...item.nhanVien] : [];
   renderChips();
   saveLocal();
   switchTab(0);
   window.scrollTo(0, 0);
 }
 
-// ========== TẢI TỪ SHEET (dùng JSONP) ==========
 async function taiTuSheet() {
-  document.getElementById('loading').style.display = 'flex';
+  showLoading("Đang tải dữ liệu từ Sheet...");
   try {
     const list = await loadPhobienJSONP();
     if (list && list.length > 0) {
@@ -507,14 +455,14 @@ async function taiTuSheet() {
       localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
       renderLocThang();
       renderDanhSach();
-      alert(`✅ Đã tải ${list.length} biên bản (thêm mới ${added}).`);
+      alert(`✅ Đã đồng bộ ${list.length} biên bản (Có ${added} biên bản mới).`);
     } else {
       alert("Sheet chưa có dữ liệu.");
     }
   } catch (e) {
-    alert("Lỗi tải: " + e.message);
+    alert("Lỗi mạng khi tải: " + e.message);
   }
-  document.getElementById('loading').style.display = 'none';
+  hideLoading();
 }
 
 // ========== KHỞI TẠO ==========
