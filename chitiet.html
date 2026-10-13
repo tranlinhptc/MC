@@ -146,6 +146,25 @@
 <div id="loading">⏳ Đang xử lý...</div>
 
 <script>
+
+ function xuLyPhepChia(val) {
+  // Nếu val có dạng "a/b" -> trả về a/b, ngược lại trả về số bình thường
+  if (typeof val === 'string' && val.includes('/')) {
+    const parts = val.split('/');
+    if (parts.length === 2) {
+      const tu = parseFloat(parts[0]);
+      const mau = parseFloat(parts[1]);
+      if (!isNaN(tu) && !isNaN(mau) && mau !== 0) {
+        return Math.round(tu / mau * 100) / 100; // Làm tròn 2 chữ số
+      }
+    }
+  }
+  // Nếu là số bình thường
+  if (val === '' || val === null || val === undefined) return '';
+  const n = parseFloat(val);
+  return isNaN(n) ? '' : n;
+ }
+ 
 // ========== CẤU HÌNH ==========
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNy9XraPEoGZdIEkvJ2Vm1RKjkvB9Q2V1KP6MugkiRuca3Y9ivNA7zOPqJHrB6aZLG/exec";
 const DS_NV_MAC_DINH = [
@@ -401,8 +420,8 @@ function hienThiChiTietCT() {
                   <tr>
                     <td>${i+1}</td>
                     <td>${displayName(ten)}</td>
-                    <td><input type="number" class="money-input" value="${val}" 
-                      oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"></td>
+                    <td><input type="text" inputmode="decimal" class="money-input" value="${val}" 
+  oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"></td>
                     <td><button class="btn-sm btn-red" onclick="xoaNguoiHD('${hd.id}','${ten.replace(/'/g,"\\'")}')">✖</button></td>
                   </tr>
                   `;
@@ -483,8 +502,8 @@ function renderBangNhapTien() {
     <tr>
       <td>${i+1}</td>
       <td>${displayName(ten)}</td>
-      <td><input type="number" class="money-input" id="tam_${i}" value="" placeholder=""></td>
-    </tr>
+<td><input type="text" inputmode="decimal" class="money-input" id="tam_${i}" value="" placeholder=""></td>
+</tr>
   `).join('');
 }
 
@@ -498,11 +517,12 @@ function themHoatDong() {
   if (hdNguoiTam.length === 0) { alert("Chọn ít nhất 1 người!"); return; }
 
   const soTien = {};
-  hdNguoiTam.forEach((ten, i) => {
-    const inp = document.getElementById('tam_' + i);
-    const v = inp ? inp.value.trim() : '';
-    soTien[ten] = v === '' ? '' : (Number(v) || 0);
-  });
+hdNguoiTam.forEach((ten, i) => {
+  const inp = document.getElementById('tam_' + i);
+  const v = inp ? inp.value.trim() : '';
+  const ketQua = xuLyPhepChia(v);
+  soTien[ten] = ketQua === '' ? '' : Number(ketQua);
+});
 
   const newId = genId();
   ctDangChon.hoatDong.push({ id: newId, ngay, noiDung, loai, nguoi: [...hdNguoiTam], soTien });
@@ -517,7 +537,9 @@ function capNhatTien(hdId, ten, val) {
   if (!ctDangChon) return;
   const hd = ctDangChon.hoatDong.find(h => h.id === hdId);
   if (!hd) return;
-  hd.soTien[ten] = val === '' ? '' : (Number(val) || 0);
+  // Xử lý phép chia nếu nhập dạng "150/3"
+  const ketQua = xuLyPhepChia(val);
+  hd.soTien[ten] = ketQua === '' ? '' : Number(ketQua);
   luuLocal();
   let tongHD = 0;
   hd.nguoi.forEach(n => {
