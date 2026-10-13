@@ -285,6 +285,7 @@ function getTemplateJSONP(fileId) {
   });
 } 
 // ========== XUẤT FILE ==========
+// ========== XUẤT FILE ==========
 async function xuatFile() {
   const noiDungRaw = document.getElementById('noiDung').value;
   const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
@@ -326,46 +327,26 @@ async function xuatFile() {
   };
 
   try {
+    // Xuất BB1 (dùng JSONP)
+    const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
+    const binary1 = window.atob(base64_1);
+    const bytes1 = new Uint8Array(binary1.length);
+    for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
+    const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
+    doc1.render(data);
+    const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    saveAs(blob1, `${stt}. Pho bien truoc cong tac.docx`);
 
-// Xuất BB1 (dùng JSONP)
-const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
-const binary1 = window.atob(base64_1);
-const bytes1 = new Uint8Array(binary1.length);
-for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
-const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
-doc1.render(data);
-const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-saveAs(blob1, `${stt}. Pho bien truoc cong tac.docx`);
+    // Xuất BB2 (dùng JSONP)
+    const base64_2 = await getTemplateJSONP(ID_TEMPLATE_BB2);
+    const binary2 = window.atob(base64_2);
+    const bytes2 = new Uint8Array(binary2.length);
+    for (let i = 0; i < binary2.length; i++) bytes2[i] = binary2.charCodeAt(i);
+    const doc2 = new window.docxtemplater(new PizZip(bytes2.buffer), { paragraphLoop: true, linebreaks: true });
+    doc2.render(data);
+    const blob2 = doc2.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);
 
-// Xuất BB2 (dùng JSONP)
-const base64_2 = await getTemplateJSONP(ID_TEMPLATE_BB2);
-const binary2 = window.atob(base64_2);
-const bytes2 = new Uint8Array(binary2.length);
-for (let i = 0; i < binary2.length; i++) bytes2[i] = binary2.charCodeAt(i);
-const doc2 = new window.docxtemplater(new PizZip(bytes2.buffer), { paragraphLoop: true, linebreaks: true });
-doc2.render(data);
-const blob2 = doc2.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);// Xuất BB1 (dùng JSONP)
-const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
-const binary1 = window.atob(base64_1);
-const bytes1 = new Uint8Array(binary1.length);
-for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
-const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
-doc1.render(data);
-const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-saveAs(blob1, `${stt}. Pho bien truoc cong tac.docx`);
-
-// Xuất BB2 (dùng JSONP)
-const base64_2 = await getTemplateJSONP(ID_TEMPLATE_BB2);
-const binary2 = window.atob(base64_2);
-const bytes2 = new Uint8Array(binary2.length);
-for (let i = 0; i < binary2.length; i++) bytes2[i] = binary2.charCodeAt(i);
-const doc2 = new window.docxtemplater(new PizZip(bytes2.buffer), { paragraphLoop: true, linebreaks: true });
-doc2.render(data);
-const blob2 = doc2.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);
-   
-   
     // Lưu local + Sheet
     const item = {
       id: genId(),
@@ -383,10 +364,10 @@ saveAs(blob2, `${stt}. Pho bien tai hien truong.docx`);
     localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
 
     // Gọi API lưu Sheet
-guiLenSheet(item);  // Dùng form ẩn thay vì fetch
+    guiLenSheet(item);
 
-alert("✅ Đã xuất 2 biên bản và lưu!");
-   
+    alert("✅ Đã xuất 2 biên bản và lưu!");
+    
     document.getElementById("loading").style.display = "none";
     switchTab(1);
   } catch (e) {
@@ -394,7 +375,6 @@ alert("✅ Đã xuất 2 biên bản và lưu!");
     document.getElementById("loading").style.display = "none";
   }
 }
-
 // ========== DANH SÁCH ==========
 function renderLocThang() {
   const sel = document.getElementById('locThang');
