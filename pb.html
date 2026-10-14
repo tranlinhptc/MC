@@ -317,7 +317,12 @@ async function xuatWord() {
     for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
     const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
     doc1.render(dataToRender);
-    const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+const blob1 = doc1.getZip().generate({ 
+  type: "blob", 
+  mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  compression: "DEFLATE" // THÊM LỆNH NÉN NÀY VÀO ĐÂY
+});
+
     
     hideLoading();
     downloadBlob(blob1, `BB_PATC_${stt}.docx`); // Sửa lại thành .docx
