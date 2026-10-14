@@ -487,7 +487,7 @@ function renderDanhSach() {
   container.innerHTML = list.map(item => `
     <div class="bb-item">
       <h4>📄 Số GĐKCT: ${item.stt}</h4>
-      <div class="info">👤 Chỉ huy: <b>${item.chiHuy}</b><br>📅 Vị trí: ${item.diaDiem}</div>
+      <div class="info">👤 Chỉ huy: <b>${item.chiHuy}</b><br>📍Vị trí: ${item.diaDiem}</div>
       <div class="actions">
         <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">📝 Load vào form</button>
         <button class="btn-sm btn-red" onclick="xoaLocal('${item.id}')">🗑 Xóa Local</button>
