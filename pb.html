@@ -384,7 +384,7 @@ let tv = dsSapXep.map((ten, idx) => ({ stt: idx + 1, ho_ten: ten, nhiem_vu: noiD
     console.log(`Template gốc: ${(bytes1.length / 1024).toFixed(1)} KB`);
     console.log(`File xuất:    ${(blob1.size / 1024).toFixed(1)} KB`);
 
-    downloadBlob(blob1, `BB_PATC_${stt}.docx`);
+    downloadBlob(blob1, `${stt}. Pho bien truoc cong tac.docx`);
   } catch (e) {
     hideLoading();
     alert("Lỗi xuất Word: " + e.message);
