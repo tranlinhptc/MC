@@ -297,17 +297,24 @@ async function xuatWord() {
   const diaDiem = document.getElementById('diaDiem').value.trim();
 
   if (!stt || !noiDung || !start1 || !start2 || nguoiTam.length === 0) {
-    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!"); return;
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
+    return;
   }
 
   showLoading("Đang tạo file Word...");
-  let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung }));
+  let tv = nguoiTam.map((ten, idx) => ({ stt: idx + 1, ho_ten: ten, nhiem_vu: noiDung }));
   let dataToRender = {
-    stt: stt, nguoi_chu_tri: chiHuy, tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
-    noi_dung_cong_tac: noiDung, dia_diem_cong_tac: diaDiem, danh_sach_nhan_vien: tv,
-    thoi_gian_bat_dau1: formatDT(start1), thoi_gian_ket_thuc1: formatTime(new Date(new Date(start1).getTime() + 30*60000)),
-    ngay_pho_bien: formatDate(start1), thoi_gian_bat_dau2: formatDT(start2),
-    thoi_gian_ket_thuc2: formatTime(new Date(new Date(start2).getTime() + 10*60000))
+    stt: stt,
+    nguoi_chu_tri: chiHuy,
+    tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
+    noi_dung_cong_tac: noiDung,
+    dia_diem_cong_tac: diaDiem,
+    danh_sach_nhan_vien: tv,
+    thoi_gian_bat_dau1: formatDT(start1),
+    thoi_gian_ket_thuc1: formatTime(new Date(new Date(start1).getTime() + 30 * 60000)),
+    ngay_pho_bien: formatDate(start1),
+    thoi_gian_bat_dau2: formatDT(start2),
+    thoi_gian_ket_thuc2: formatTime(new Date(new Date(start2).getTime() + 10 * 60000))
   };
 
   try {
@@ -315,21 +322,87 @@ async function xuatWord() {
     const binary1 = window.atob(base64_1);
     const bytes1 = new Uint8Array(binary1.length);
     for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
-    const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
-    doc1.render(dataToRender);
-const blob1 = doc1.getZip().generate({ 
-  type: "blob", 
-  mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  compression: "DEFLATE" // THÊM LỆNH NÉN NÀY VÀO ĐÂY
-});
 
-    
+    // Bước 1: Mở zip template
+    const zip = new PizZip(bytes1.buffer);
+
+    // Bước 2: XÓA CÁC FILE RÁC không cần thiết (giảm size đáng kể)
+    // Chỉ xóa những file KHÔNG ảnh hưởng đến nội dung văn bản
+    const filesToRemove = [
+      'docProps/thumbnail.jpeg',
+      'docProps/thumbnail.png',
+      'docProps/thumbnail.emf',
+      'docProps/thumbnail.wmf'
+    ];
+    filesToRemove.forEach(fname => {
+      if (zip.files[fname]) {
+        delete zip.files[fname];
+      }
+    });
+
+    // Bước 3: Render dữ liệu vào template
+    const doc1 = new window.docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+      nullGetter: () => ""
+    });
+    doc1.render(dataToRender);
+
+    // Bước 4: Generate blob với NÉN TỐI ĐA
+    // - compression: DEFLATE (dùng thuật toán nén)
+    // - compressionOptions.level: 9 (mức nén cao nhất, 1-9)
+    const outZip = doc1.getZip();
+
+    // Nén lại từng file XML bên trong với level cao
+    Object.keys(outZip.files).forEach(fname => {
+      const f = outZip.files[fname];
+      // Chỉ nén các file XML và text (không nén ảnh đã nén sẵn)
+      if (fname.endsWith('.xml') || fname.endsWith('.rels') ||
+          fname.endsWith('.txt') || fname.endsWith('.json')) {
+        if (f._data && f._data.length > 0) {
+          f.options = f.options || {};
+          f.options.compression = 'DEFLATE';
+          f.options.compressionOptions = { level: 9 };
+        }
+      }
+    });
+
+    const blob1 = outZip.generate({
+      type: "blob",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      compression: "DEFLATE",
+      compressionOptions: { level: 9 },
+      platform: "DOS"  // Tương thích tốt hơn với Word
+    });
+
     hideLoading();
-    downloadBlob(blob1, `BB_PATC_${stt}.docx`); // Sửa lại thành .docx
+
+    // Log kích thước để kiểm tra
+    console.log(`Template gốc: ${(bytes1.length / 1024).toFixed(1)} KB`);
+    console.log(`File xuất:    ${(blob1.size / 1024).toFixed(1)} KB`);
+
+    downloadBlob(blob1, `BB_PATC_${stt}.docx`);
   } catch (e) {
-    hideLoading(); alert("Lỗi xuất Word: " + e.message);
+    hideLoading();
+    alert("Lỗi xuất Word: " + e.message);
   }
 }
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    if (document.body.contains(a)) document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 10000);
+}
+ 
 
 // ==================== 2. CHỈ LƯU SHEET ====================
 function luuSheet() {
