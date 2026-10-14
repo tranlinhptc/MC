@@ -93,8 +93,11 @@
       <label>Time Hiện trường:</label>
       <input type="datetime-local" id="startBB2">
     </div>
-    <button class="btn-blue btn-block" onclick="xuatFile()">📄 Xuất & Lưu biên bản</button>
-  </div>
+<div style="display: flex; gap: 8px; margin-top: 10px;">
+      <button class="btn-gray" style="flex: 1;" onclick="xoaTrangForm()">🔄 Làm mới Form</button>
+      <button class="btn-orange" style="flex: 1.5;" onclick="xuatWord()">📄 Chỉ Xuất Word</button>
+      <button class="btn-blue" style="flex: 1.5;" onclick="luuSheet()">💾 Chỉ Lưu Sheet</button>
+    </div>
 
   <!-- TAB 2: DANH SÁCH -->
   <div class="tab-content" id="tab1">
@@ -309,6 +312,110 @@ function guiLenSheet(item, callback) {
   }, 500);
 }
 
+// ==================== 1. CHỈ XUẤT WORD ====================
+async function xuatWord() {
+  const stt = document.getElementById('stt').value.trim();
+  const noiDungRaw = document.getElementById('noiDung').value;
+  const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
+  const start1 = document.getElementById('startBB1').value;
+  const start2 = document.getElementById('startBB2').value;
+  const chiHuy = document.getElementById('chiHuy').value;
+  const diaDiem = document.getElementById('diaDiem').value.trim();
+
+  if (!stt || !noiDung || !start1 || !start2 || nguoiTam.length === 0) {
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
+    return;
+  }
+
+  showLoading("Đang tạo file Word...");
+
+  let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung }));
+  let dataToRender = {
+    stt: stt,
+    nguoi_chu_tri: chiHuy,
+    tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
+    noi_dung_cong_tac: noiDung,
+    dia_diem_cong_tac: diaDiem,
+    danh_sach_nhan_vien: tv,
+    thoi_gian_bat_dau1: formatDT(start1),
+    thoi_gian_ket_thuc1: formatTime(new Date(new Date(start1).getTime() + 30*60000)),
+    ngay_pho_bien: formatDate(start1),
+    thoi_gian_bat_dau2: formatDT(start2),
+    thoi_gian_ket_thuc2: formatTime(new Date(new Date(start2).getTime() + 10*60000))
+  };
+
+  try {
+    const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
+    const binary1 = window.atob(base64_1);
+    const bytes1 = new Uint8Array(binary1.length);
+    for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
+    const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
+    doc1.render(dataToRender);
+    const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    
+    hideLoading();
+    downloadBlob(blob1, `BB_PATC_${stt}.pdf`);
+  } catch (e) {
+    hideLoading();
+    alert("Lỗi xuất Word: " + e.message);
+  }
+}
+
+
+// ==================== 2. CHỈ LƯU SHEET ====================
+function luuSheet() {
+  const stt = document.getElementById('stt').value.trim();
+  const noiDungRaw = document.getElementById('noiDung').value;
+  const start1 = document.getElementById('startBB1').value;
+  const start2 = document.getElementById('startBB2').value;
+  const chiHuy = document.getElementById('chiHuy').value;
+  const diaDiem = document.getElementById('diaDiem').value.trim();
+
+  if (!stt || !noiDungRaw || !start1 || !start2 || nguoiTam.length === 0) {
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
+    return;
+  }
+
+  showLoading("Đang lưu dữ liệu lên Google Sheet...");
+
+  const itemId = currentEditingId || genId(); // Dùng ID cũ nếu đang sửa form load từ list
+  const existingIdx = dbPhobien.items.findIndex(x => x.id === itemId);
+  let ngayTaoGoc = new Date().toLocaleString('vi-VN');
+  
+  if (existingIdx > -1) {
+     ngayTaoGoc = dbPhobien.items[existingIdx].ngayTao; // Giữ nguyên ngày tạo gốc nếu là cập nhật
+  }
+
+  const item = {
+    id: itemId, ngayTao: ngayTaoGoc, stt: stt,
+    chiHuy: chiHuy, nhanVien: [...nguoiTam], noiDung: noiDungRaw, diaDiem: diaDiem,
+    timePATC: formatDT(start1), timeHienTruong: formatDT(start2), thoiGianTao: new Date().toISOString()
+  };
+
+  // Lưu vào bộ nhớ máy hiện tại
+  if (existingIdx > -1) {
+    dbPhobien.items[existingIdx] = item; 
+  } else {
+    dbPhobien.items.push(item);
+  }
+  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+  
+  currentEditingId = item.id; // Ghi nhớ ID đang thao tác
+  saveLocal();
+
+  // Đẩy ngầm lên Google Sheet
+  guiLenSheet(item, (ok) => {
+    hideLoading();
+    if (ok) {
+      alert("✅ Đã lưu dữ liệu lên Google Sheet thành công!");
+      switchTab(1); // Chuyển qua tab danh sách để xem
+    } else {
+      alert("⚠️ Không có kết nối mạng. Dữ liệu đã lưu tạm trên máy, hãy đồng bộ lại sau!");
+    }
+  });
+}
+
+ 
 // ========== XUẤT FILE + LƯU SHEET ==========
 async function xuatFile() {
   const noiDungRaw = document.getElementById('noiDung').value;
