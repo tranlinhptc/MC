@@ -406,9 +406,82 @@ function downloadBlob(blob, filename) {
   }, 10000);
 }
  
-
-// ==================== 2. CHỈ LƯU SHEET ====================
 function luuSheet() {
+  const stt = document.getElementById('stt').value.trim();
+  const noiDungRaw = document.getElementById('noiDung').value;
+  const start1 = document.getElementById('startBB1').value;
+  const start2 = document.getElementById('startBB2').value;
+  const chiHuy = document.getElementById('chiHuy').value;
+  const diaDiem = document.getElementById('diaDiem').value.trim();
+
+  if (!stt || !noiDungRaw || !start1 || !start2 || nguoiTam.length === 0) {
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
+    return;
+  }
+
+  showLoading("Đang lưu dữ liệu lên Google Sheet...");
+
+  // ===== XÁC ĐỊNH itemId VÀ existingIdx =====
+  let itemId = currentEditingId;
+  let existingIdx = -1;
+
+  if (itemId) {
+    // Đang sửa 1 item có sẵn (đã load từ danh sách)
+    existingIdx = dbPhobien.items.findIndex(x => x.id === itemId);
+  } else {
+    // Chưa chọn item nào -> kiểm tra STT đã tồn tại trong local chưa
+    existingIdx = dbPhobien.items.findIndex(x => String(x.stt).trim() === String(stt).trim());
+    if (existingIdx > -1) {
+      // STT trùng -> dùng lại ID cũ để ghi đè
+      itemId = dbPhobien.items[existingIdx].id;
+    } else {
+      // STT mới -> tạo ID mới
+      itemId = genId();
+    }
+  }
+
+  // Giữ nguyên ngayTao gốc nếu đang update
+  let ngayTaoGoc = new Date().toLocaleString('vi-VN');
+  if (existingIdx > -1) ngayTaoGoc = dbPhobien.items[existingIdx].ngayTao;
+
+  const item = {
+    id: itemId,
+    ngayTao: ngayTaoGoc,
+    stt: stt,
+    chiHuy: chiHuy,
+    nhanVien: [...nguoiTam],
+    noiDung: noiDungRaw,
+    diaDiem: diaDiem,
+    timePATC: formatDT(start1),
+    timeHienTruong: formatDT(start2),
+    thoiGianTao: new Date().toISOString()
+  };
+
+  if (existingIdx > -1) {
+    // Update item cũ
+    dbPhobien.items[existingIdx] = item;
+  } else {
+    // Thêm mới
+    dbPhobien.items.push(item);
+  }
+
+  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+  currentEditingId = item.id;
+  saveLocal();
+
+  guiLenSheet(item, (ok) => {
+    hideLoading();
+    if (ok) {
+      alert("✅ Đã lưu!");
+      switchTab(1);
+    } else {
+      alert("⚠️ Lỗi mạng. Dữ liệu đã lưu tạm trên máy.");
+    }
+  });
+}
+
+ // ==================== 2. CHỈ LƯU SHEET ====================
+function luusheetcu() {
   const stt = document.getElementById('stt').value.trim();
   const noiDungRaw = document.getElementById('noiDung').value;
   const start1 = document.getElementById('startBB1').value;
