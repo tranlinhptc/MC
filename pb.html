@@ -12,8 +12,7 @@
   body { background: #f0f2f5; margin: 0; padding: 10px; }
   .container { max-width: 100%; background: #fff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
   h1 { color: #c00; text-align: center; font-size: 20px; margin: 0 0 10px; text-transform: uppercase; }
-  h3 { color: #0056b3; border-bottom: 2px solid #007bff; padding-bottom: 4px; margin: 15px 0 8px; font-size: 15px; }
-
+  
   .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
   .tab-btn { flex: 1; padding: 10px; background: #e9ecef; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
   .tab-btn.active { background: #007bff; color: #fff; }
@@ -27,8 +26,7 @@
   button { background: #28a745; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin: 2px 0; }
   .btn-blue { background: #007bff; } .btn-red { background: #dc3545; } .btn-orange { background: #fd7e14; } .btn-gray { background: #6c757d; }
   .btn-sm { padding: 5px 10px; font-size: 11px; width: auto; }
-  .btn-block { display: block; width: 100%; }
-
+  
   .chip-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 5px 0; }
   .chip { padding: 8px 4px; border-radius: 15px; border: 2px solid #ccc; background: #f4f4f4; color: #666; font-size: 11px; cursor: pointer; text-align: center; font-weight: normal; }
   .chip.selected { background: #007bff; color: #fff; border-color: #007bff; font-weight: bold; }
@@ -93,12 +91,12 @@
       <label>Time Hiện trường:</label>
       <input type="datetime-local" id="startBB2">
     </div>
-<div style="display: flex; gap: 8px; margin-top: 10px;">
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
       <button class="btn-gray" style="flex: 1;" onclick="xoaTrangForm()">🔄 Làm mới Form</button>
       <button class="btn-orange" style="flex: 1.5;" onclick="xuatWord()">📄 Chỉ Xuất Word</button>
       <button class="btn-blue" style="flex: 1.5;" onclick="luuSheet()">💾 Chỉ Lưu Sheet</button>
     </div>
-</div>
+  </div>
 
   <!-- TAB 2: DANH SÁCH -->
   <div class="tab-content" id="tab1">
@@ -119,7 +117,7 @@
 
 <script>
 // ========== CẤU HÌNH ==========
-// THAY LINK MỚI VÀO ĐÂY ANH NHÉ
+// THAY LINK WEB APP MỚI CỦA ANH VÀO ĐÂY SAU KHI DEPLOY LẠI CODE.GS
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxO2dgiHOGiWS880ghwHWimdL7oQ20jhTGAH0mKB-otFcm9J0zsL--_OId8CrqLIXl/exec";
 const ID_TEMPLATE_BB1 = "1Gj1PDFAHWeKG_2PCod4dLKHvXxq5xf6u";
 const DS_NV = ["Nguyễn Hữu Kính", "Hoàng Trần Quản Trọng", "Ngô Văn Quang", "Trần Văn Hoàng", "Kim Văn Quỳnh", "Hồ Văn Huy", "Lê Hữu Anh", "Trần Phúc Linh", "Tạ Quốc Đạt", "Võ Ngọc Sơn", "Nguyễn Xuân Khánh", "Đoàn Hoàng Quang Định", "Võ Văn Sỹ", "Lưu Đức Minh", "Nguyễn Hữu Đạt", "Nguyễn Mạnh Hoà"];
@@ -128,6 +126,7 @@ const DS_NV = ["Nguyễn Hữu Kính", "Hoàng Trần Quản Trọng", "Ngô Vă
 let dbPhobien = JSON.parse(localStorage.getItem('db_phobien') || '{"items":[]}');
 if (!dbPhobien.items) dbPhobien.items = [];
 let nguoiTam = [];
+let currentEditingId = null; // Bổ sung biến quan trọng để phân biệt Form cũ hay mới
 
 // ========== HELPERS ==========
 function getShortName(full) {
@@ -141,13 +140,17 @@ function getShortName(full) {
 }
 function displayName(full) { return "Mr." + getShortName(full); }
 function genId() { return 'pb_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
+function showLoading(msg) { document.getElementById("loading").innerText = msg; document.getElementById("loading").style.display = "flex"; }
+function hideLoading() { document.getElementById("loading").style.display = "none"; }
 
 function formatDT(s) {
+  if(!s) return "";
   let d = new Date(s);
   return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)} ngày ${('0'+d.getDate()).slice(-2)}/${('0'+(d.getMonth()+1)).slice(-2)}/${d.getFullYear()}`;
 }
 function formatTime(d) { return `${('0'+d.getHours()).slice(-2)} giờ ${('0'+d.getMinutes()).slice(-2)}`; }
 function formatDate(s) {
+  if(!s) return "";
   let d = new Date(s);
   return `ngày ${('0'+d.getDate()).slice(-2)} tháng ${('0'+(d.getMonth()+1)).slice(-2)} năm ${d.getFullYear()}`;
 }
@@ -162,14 +165,13 @@ function downloadBlob(blob, filename) {
   setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); URL.revokeObjectURL(url); }, 5000);
 }
 
-// ========== TAB ==========
+// ========== TAB & UI ==========
 function switchTab(idx) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
   document.querySelectorAll('.tab-content').forEach((c,i) => c.classList.toggle('active', i===idx));
   if (idx === 1) { renderLocThang(); renderDanhSach(); }
 }
 
-// ========== FORM ==========
 function renderChips() {
   const container = document.getElementById('nvContainer');
   container.innerHTML = DS_NV.map(nv => {
@@ -183,8 +185,10 @@ function toggleNguoi(ten) {
   renderChips(); saveLocal();
 }
 
+// ========== LOCAL STORAGE ==========
 function saveLocal() {
   const data = {
+    currentId: currentEditingId,
     chiHuy: document.getElementById('chiHuy').value,
     nhanVien: [...nguoiTam],
     stt: document.getElementById('stt').value,
@@ -201,14 +205,23 @@ function restoreLocal() {
   if (!saved) return;
   try {
     const data = JSON.parse(saved);
-    if (data.chiHuy) document.getElementById('chiHuy').value = data.chiHuy;
-    if (data.stt) document.getElementById('stt').value = data.stt;
-    if (data.noiDung) document.getElementById('noiDung').value = data.noiDung;
-    if (data.diaDiem) document.getElementById('diaDiem').value = data.diaDiem;
-    if (data.startBB1) document.getElementById('startBB1').value = data.startBB1;
-    if (data.startBB2) document.getElementById('startBB2').value = data.startBB2;
+    if (data.currentId) currentEditingId = data.currentId;
+    ['chiHuy','stt','noiDung','diaDiem','startBB1','startBB2'].forEach(id => {
+      if (data[id]) document.getElementById(id).value = data[id];
+    });
     if (data.nhanVien && Array.isArray(data.nhanVien)) { nguoiTam = [...data.nhanVien]; renderChips(); }
   } catch(e) {}
+}
+
+function xoaTrangForm() {
+  if(!confirm("Bạn muốn xóa trắng Form để nhập Biên bản mới?")) return;
+  currentEditingId = null;
+  document.getElementById('stt').value = '';
+  document.getElementById('noiDung').value = '';
+  document.getElementById('diaDiem').value = '';
+  nguoiTam = [];
+  renderChips();
+  saveLocal();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -216,96 +229,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if (el) { el.addEventListener('input', saveLocal); el.addEventListener('change', saveLocal); }
   });
-  const noiDung = document.getElementById('noiDung');
-  noiDung.addEventListener('input', function() {
-    this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';
-    updateDiaDiemSuggestions();
-  });
-  document.getElementById('diaDiem').addEventListener('input', updateDiaDiemSuggestions);
 });
 
-function updateDiaDiemSuggestions() {
-  const noiDung = document.getElementById('noiDung').value;
-  const datalist = document.getElementById('diaDiemSuggestions');
-  datalist.innerHTML = '';
-  if (!noiDung.trim()) return;
-  const lines = noiDung.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const suggestions = new Set();
-  lines.forEach(line => {
-    const match = line.match(/^(?:tại|ở|địa điểm|nơi)\s+(.+)/i);
-    if (match) suggestions.add(match[1].trim());
-    else if (line.includes(',')) suggestions.add(line);
-    else if (line.length > 5 && line.length < 100 && !line.includes(':')) suggestions.add(line);
-  });
-  suggestions.forEach(s => {
-    const option = document.createElement('option');
-    option.value = s; datalist.appendChild(option);
-  });
-}
-
-// ========== JSONP: LẤY TEMPLATE ==========
+// ========== KẾT NỐI SERVER ==========
 function getTemplateJSONP(fileId) {
   return new Promise((resolve, reject) => {
-    const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const callbackName = 'jsonp_cb_' + Date.now();
     window[callbackName] = function(data) {
       delete window[callbackName];
-      const script = document.getElementById(callbackName);
-      if (script) document.body.removeChild(script);
+      document.getElementById(callbackName)?.remove();
       if (data.error) reject(new Error(data.error)); else resolve(data.base64);
     };
     const script = document.createElement('script');
     script.id = callbackName;
     script.src = `${WEB_APP_URL}?action=getTemplate&fileId=${fileId}&callback=${callbackName}`;
-    script.onerror = function() { reject(new Error("Không thể tải template")); };
+    script.onerror = () => reject(new Error("Lỗi tải template"));
     document.body.appendChild(script);
   });
 }
 
-// ========== JSONP: LOAD PHOBIEN ==========
 function loadPhobienJSONP() {
   return new Promise((resolve, reject) => {
-    const callbackName = 'jsonp_load_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const callbackName = 'jsonp_load_' + Date.now();
     window[callbackName] = function(data) {
       delete window[callbackName];
-      const script = document.getElementById(callbackName);
-      if (script) document.body.removeChild(script);
+      document.getElementById(callbackName)?.remove();
       if (data.error) reject(new Error(data.error)); else resolve(data.phobien || []);
     };
     const script = document.createElement('script');
     script.id = callbackName;
     script.src = `${WEB_APP_URL}?action=loadPhobien&callback=${callbackName}`;
-    script.onerror = function() { reject(new Error("Không thể tải dữ liệu")); };
+    script.onerror = () => reject(new Error("Lỗi tải dữ liệu"));
     document.body.appendChild(script);
   });
 }
 
-// ========== GỬI LÊN SHEET BẰNG IFRAME (CHỐNG LỖI ĐIỆN THOẠI) ==========
 function guiLenSheet(item, callback) {
   const url = WEB_APP_URL + '?action=savePhobien';
-  
-  // Tạo iframe ẩn để submit form ngầm, tránh bị trình duyệt điện thoại ngắt kết nối
   const iframeName = 'hiddenIframe_' + Date.now();
   const iframe = document.createElement('iframe');
-  iframe.name = iframeName;
-  iframe.style.display = 'none';
+  iframe.name = iframeName; iframe.style.display = 'none';
   document.body.appendChild(iframe);
 
   const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = url;
-  form.target = iframeName;
-
+  form.method = 'POST'; form.action = url; form.target = iframeName;
   const input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'data';
-  input.value = JSON.stringify(item);
-
-  form.appendChild(input);
-  document.body.appendChild(form);
+  input.type = 'hidden'; input.name = 'data'; input.value = JSON.stringify(item);
   
+  form.appendChild(input); document.body.appendChild(form);
   form.submit();
 
-  // Đợi 0.5s để form gửi đi thành công, sau đó callback chạy tiếp tục tải Word xuống
   setTimeout(() => {
     document.body.removeChild(form);
     setTimeout(() => { if(document.body.contains(iframe)) document.body.removeChild(iframe); }, 5000);
@@ -324,117 +297,12 @@ async function xuatWord() {
   const diaDiem = document.getElementById('diaDiem').value.trim();
 
   if (!stt || !noiDung || !start1 || !start2 || nguoiTam.length === 0) {
-    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
-    return;
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!"); return;
   }
 
   showLoading("Đang tạo file Word...");
-
   let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung }));
   let dataToRender = {
-    stt: stt,
-    nguoi_chu_tri: chiHuy,
-    tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
-    noi_dung_cong_tac: noiDung,
-    dia_diem_cong_tac: diaDiem,
-    danh_sach_nhan_vien: tv,
-    thoi_gian_bat_dau1: formatDT(start1),
-    thoi_gian_ket_thuc1: formatTime(new Date(new Date(start1).getTime() + 30*60000)),
-    ngay_pho_bien: formatDate(start1),
-    thoi_gian_bat_dau2: formatDT(start2),
-    thoi_gian_ket_thuc2: formatTime(new Date(new Date(start2).getTime() + 10*60000))
-  };
-
-  try {
-    const base64_1 = await getTemplateJSONP(ID_TEMPLATE_BB1);
-    const binary1 = window.atob(base64_1);
-    const bytes1 = new Uint8Array(binary1.length);
-    for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
-    const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
-    doc1.render(dataToRender);
-    const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    
-    hideLoading();
-    downloadBlob(blob1, `BB_PATC_${stt}.pdf`);
-  } catch (e) {
-    hideLoading();
-    alert("Lỗi xuất Word: " + e.message);
-  }
-}
-
-
-// ==================== 2. CHỈ LƯU SHEET ====================
-function luuSheet() {
-  const stt = document.getElementById('stt').value.trim();
-  const noiDungRaw = document.getElementById('noiDung').value;
-  const start1 = document.getElementById('startBB1').value;
-  const start2 = document.getElementById('startBB2').value;
-  const chiHuy = document.getElementById('chiHuy').value;
-  const diaDiem = document.getElementById('diaDiem').value.trim();
-
-  if (!stt || !noiDungRaw || !start1 || !start2 || nguoiTam.length === 0) {
-    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!");
-    return;
-  }
-
-  showLoading("Đang lưu dữ liệu lên Google Sheet...");
-
-  const itemId = currentEditingId || genId(); // Dùng ID cũ nếu đang sửa form load từ list
-  const existingIdx = dbPhobien.items.findIndex(x => x.id === itemId);
-  let ngayTaoGoc = new Date().toLocaleString('vi-VN');
-  
-  if (existingIdx > -1) {
-     ngayTaoGoc = dbPhobien.items[existingIdx].ngayTao; // Giữ nguyên ngày tạo gốc nếu là cập nhật
-  }
-
-  const item = {
-    id: itemId, ngayTao: ngayTaoGoc, stt: stt,
-    chiHuy: chiHuy, nhanVien: [...nguoiTam], noiDung: noiDungRaw, diaDiem: diaDiem,
-    timePATC: formatDT(start1), timeHienTruong: formatDT(start2), thoiGianTao: new Date().toISOString()
-  };
-
-  // Lưu vào bộ nhớ máy hiện tại
-  if (existingIdx > -1) {
-    dbPhobien.items[existingIdx] = item; 
-  } else {
-    dbPhobien.items.push(item);
-  }
-  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
-  
-  currentEditingId = item.id; // Ghi nhớ ID đang thao tác
-  saveLocal();
-
-  // Đẩy ngầm lên Google Sheet
-  guiLenSheet(item, (ok) => {
-    hideLoading();
-    if (ok) {
-      alert("✅ Đã lưu dữ liệu lên Google Sheet thành công!");
-      switchTab(1); // Chuyển qua tab danh sách để xem
-    } else {
-      alert("⚠️ Không có kết nối mạng. Dữ liệu đã lưu tạm trên máy, hãy đồng bộ lại sau!");
-    }
-  });
-}
-
- 
-// ========== XUẤT FILE + LƯU SHEET ==========
-async function xuatFile() {
-  const noiDungRaw = document.getElementById('noiDung').value;
-  const noiDung = noiDungRaw.replace(/\n/g, ' ').replace(/\r/g, '');
-  const start1 = document.getElementById('startBB1').value;
-  const start2 = document.getElementById('startBB2').value;
-  const stt = document.getElementById('stt').value.trim();
-  const chiHuy = document.getElementById('chiHuy').value;
-  const diaDiem = document.getElementById('diaDiem').value.trim();
-
-  if (!noiDung || !start1 || !start2) { alert("Vui lòng điền đủ thông tin!"); return; }
-  if (nguoiTam.length === 0) { alert("Chọn ít nhất 1 nhân viên!"); return; }
-  if (!stt) { alert("Nhập số GĐKCT!"); return; }
-
-  document.getElementById("loading").style.display = "flex";
-
-  let tv = nguoiTam.map((ten, idx) => ({ stt: idx+1, ho_ten: ten, nhiem_vu: noiDung }));
-  let data = {
     stt: stt, nguoi_chu_tri: chiHuy, tong_so_tham_gia: `${tv.length + 1}/${tv.length + 1}`,
     noi_dung_cong_tac: noiDung, dia_diem_cong_tac: diaDiem, danh_sach_nhan_vien: tv,
     thoi_gian_bat_dau1: formatDT(start1), thoi_gian_ket_thuc1: formatTime(new Date(new Date(start1).getTime() + 30*60000)),
@@ -448,28 +316,58 @@ async function xuatFile() {
     const bytes1 = new Uint8Array(binary1.length);
     for (let i = 0; i < binary1.length; i++) bytes1[i] = binary1.charCodeAt(i);
     const doc1 = new window.docxtemplater(new PizZip(bytes1.buffer), { paragraphLoop: true, linebreaks: true });
-    doc1.render(data);
+    doc1.render(dataToRender);
     const blob1 = doc1.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     
-    const item = {
-      id: genId(), ngayTao: new Date().toLocaleString('vi-VN'), stt: stt,
-      chiHuy: chiHuy, nhanVien: [...nguoiTam], noiDung: noiDungRaw, diaDiem: diaDiem,
-      timePATC: formatDT(start1), timeHienTruong: formatDT(start2), thoiGianTao: new Date().toISOString()
-    };
-    dbPhobien.items.push(item);
-    localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
-
-    // Đẩy lên Google Sheet qua iframe ẩn trước khi ra lệnh tải Word
-    guiLenSheet(item, (ok) => {
-      document.getElementById("loading").style.display = "none";
-      downloadBlob(blob1, `${stt}. Pho bien.docx`);
-      alert("✅ Đã xuất Word và Lưu trữ thành công!");
-      switchTab(1);
-    });
+    hideLoading();
+    downloadBlob(blob1, `BB_PATC_${stt}.docx`); // Sửa lại thành .docx
   } catch (e) {
-    alert("Lỗi: " + e.message);
-    document.getElementById("loading").style.display = "none";
+    hideLoading(); alert("Lỗi xuất Word: " + e.message);
   }
+}
+
+// ==================== 2. CHỈ LƯU SHEET ====================
+function luuSheet() {
+  const stt = document.getElementById('stt').value.trim();
+  const noiDungRaw = document.getElementById('noiDung').value;
+  const start1 = document.getElementById('startBB1').value;
+  const start2 = document.getElementById('startBB2').value;
+  const chiHuy = document.getElementById('chiHuy').value;
+  const diaDiem = document.getElementById('diaDiem').value.trim();
+
+  if (!stt || !noiDungRaw || !start1 || !start2 || nguoiTam.length === 0) {
+    alert("Vui lòng điền đủ thông tin, Số GĐKCT và chọn ít nhất 1 nhân viên!"); return;
+  }
+
+  showLoading("Đang lưu dữ liệu lên Google Sheet...");
+
+  const itemId = currentEditingId || genId();
+  const existingIdx = dbPhobien.items.findIndex(x => x.id === itemId);
+  let ngayTaoGoc = new Date().toLocaleString('vi-VN');
+  if (existingIdx > -1) ngayTaoGoc = dbPhobien.items[existingIdx].ngayTao;
+
+  const item = {
+    id: itemId, ngayTao: ngayTaoGoc, stt: stt,
+    chiHuy: chiHuy, nhanVien: [...nguoiTam], noiDung: noiDungRaw, diaDiem: diaDiem,
+    timePATC: formatDT(start1), timeHienTruong: formatDT(start2), thoiGianTao: new Date().toISOString()
+  };
+
+  if (existingIdx > -1) dbPhobien.items[existingIdx] = item; 
+  else dbPhobien.items.push(item);
+  
+  localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+  currentEditingId = item.id;
+  saveLocal();
+
+  guiLenSheet(item, (ok) => {
+    hideLoading();
+    if (ok) {
+      alert("✅ Đã lưu dữ liệu thành công!");
+      switchTab(1);
+    } else {
+      alert("⚠️ Lỗi mạng. Dữ liệu đã lưu tạm trên máy.");
+    }
+  });
 }
 
 // ========== DANH SÁCH ==========
@@ -502,12 +400,15 @@ function renderDanhSach() {
       return match && match[2] === m && match[3] === y;
     });
   }
+  
+  list.sort((a,b) => new Date(b.thoiGianTao) - new Date(a.thoiGianTao));
+
   if (list.length === 0) {
-    container.innerHTML = '<p style="color:#999;">Chưa có biên bản nào.</p>'; return;
+    container.innerHTML = '<p style="color:#999;text-align:center;">Chưa có biên bản nào.</p>'; return;
   }
   container.innerHTML = list.map(item => `
     <div class="bb-item">
-      <h4>📄 Số ${item.stt} - ${item.chiHuy}</h4>
+      <h4>📄 Số GĐKCT: ${item.stt}</h4>
       <div class="info">👤 Chỉ huy: <b>${item.chiHuy}</b><br>📅 Ngày: ${item.timePATC}</div>
       <div class="actions">
         <button class="btn-sm btn-blue" onclick="loadVaoForm('${item.id}')">📝 Load vào form</button>
@@ -517,11 +418,11 @@ function renderDanhSach() {
   `).join('');
 }
 
-// Hàm xóa Local không ảnh hưởng tới sheet
 function xoaLocal(id) {
   if (confirm("Chỉ xóa dòng này trên trình duyệt hiện tại? (Dữ liệu trên Sheet vẫn được giữ nguyên)")) {
     dbPhobien.items = dbPhobien.items.filter(x => x.id !== id);
     localStorage.setItem('db_phobien', JSON.stringify(dbPhobien));
+    if(currentEditingId === id) xoaTrangForm();
     renderLocThang();
     renderDanhSach();
   }
@@ -530,6 +431,9 @@ function xoaLocal(id) {
 function loadVaoForm(id) {
   const item = dbPhobien.items.find(x => x.id === id);
   if (!item) return;
+  
+  currentEditingId = id; // Ghi nhớ ID đang sửa
+  
   document.getElementById('chiHuy').value = item.chiHuy;
   document.getElementById('stt').value = item.stt;
   document.getElementById('noiDung').value = item.noiDung;
@@ -545,9 +449,8 @@ function loadVaoForm(id) {
   renderChips(); saveLocal(); switchTab(0); window.scrollTo(0, 0);
 }
 
-// ========== TẢI TỪ SHEET ==========
 async function taiTuSheet() {
-  document.getElementById('loading').style.display = 'flex';
+  showLoading("Đang tải dữ liệu...");
   try {
     const list = await loadPhobienJSONP();
     if (list && list.length > 0) {
@@ -563,10 +466,9 @@ async function taiTuSheet() {
       alert("Sheet chưa có dữ liệu.");
     }
   } catch (e) { alert("Lỗi tải: " + e.message); }
-  document.getElementById('loading').style.display = 'none';
+  hideLoading();
 }
 
-// ========== KHỞI TẠO ==========
 window.onload = function() {
   renderChips(); restoreLocal();
   const now = new Date();
