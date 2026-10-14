@@ -302,7 +302,10 @@ async function xuatWord() {
   }
 
   showLoading("Đang tạo file Word...");
-  let tv = nguoiTam.map((ten, idx) => ({ stt: idx + 1, ho_ten: ten, nhiem_vu: noiDung }));
+// Sort theo thứ tự DS_NV trước khi map
+const dsSapXep = [...nguoiTam].sort((a, b) => DS_NV.indexOf(a) - DS_NV.indexOf(b));
+let tv = dsSapXep.map((ten, idx) => ({ stt: idx + 1, ho_ten: ten, nhiem_vu: noiDung }));
+ 
   let dataToRender = {
     stt: stt,
     nguoi_chu_tri: chiHuy,
