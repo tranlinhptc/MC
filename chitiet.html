@@ -422,10 +422,14 @@ function hienThiChiTietCT() {
                     <td>${i+1}</td>
                     <td>${displayName(ten)}</td>
                     
-<td><input type="text" inputmode="tel" class="money-input" value="${val}" 
-  oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"
-  onblur="xuLyBlurTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this)"></td>
-  
+<td>
+  <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+    <input type="text" inputmode="tel" class="money-input" value="${val}"
+    oninput="capNhatTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this.value)"
+    onblur="xuLyBlurTien('${hd.id}','${ten.replace(/'/g,"\\'")}',this)" style="width: 70px;">
+    <button class="btn-sm btn-gray" style="padding: 2px 6px; font-size: 14px; border-radius: 4px;" onclick="themDauChia(this)">÷</button>
+  </div>
+</td>
                     <td><button class="btn-sm btn-red" onclick="xoaNguoiHD('${hd.id}','${ten.replace(/'/g,"\\'")}')">✖</button></td>
                   </tr>
                   `;
@@ -506,7 +510,12 @@ function renderBangNhapTien() {
     <tr>
       <td>${i+1}</td>
       <td>${displayName(ten)}</td>
-<td><input type="text" inputmode="tel" class="money-input" id="tam_${i}" value="" placeholder=""></td>
+<td>
+  <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+    <input type="text" inputmode="tel" class="money-input" id="tam_${i}" value="" placeholder="" style="width: 70 khipx;">
+    <button class="btn-sm btn-gray" style b="padding: 2px 6px; font-size: 14px; border-radius: 4px;" onclick="themDauChia(this)">÷</button>
+  </div>
+</td>
 </tr>
   `).join('');
 }
@@ -956,7 +965,22 @@ async function taiDuLieu() {
   } catch (e) { alert("Lỗi tải: " + e.message); }
   document.getElementById('loading').style.display = 'none';
 }
-
+// Hàm xử lýấm nút chia (dành cho iPhone không có dấu / trên bàn phím)
+function themDauChia(btn) {
+  // Lấy ô input nằm ngay trước nút bấm
+  const input = btn.previousElementSibling;
+  
+  // Nếu trong ô đã có dấu / rồi thì không thêm nữa
+  if (input.value.includes('/')) return; 
+  
+  // Tự động chèn dấu / vào cuối
+  input.value += '/';
+  input.focus(); // Đưa con trỏ về ô nhập
+  
+  // Kích hoạt sự kiện input để code tự động lưu tạm
+  const event = new Event('input', { bubbles: true });
+  input.dispatchEvent(event);
+}
 // ========== KHỞI TẠO ==========
 window.onload = function() {
   renderLocThang();
