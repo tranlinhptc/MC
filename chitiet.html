@@ -860,23 +860,36 @@ function luuLocal() {
   localStorage.setItem('db_thuchi_v6', JSON.stringify(db));
 }
 
+// Thay thế hàm autoSave cũ bằng hàm này
 function autoSave() {
-  luuLocal();
-  //if (autoSaveTimer) clearTimeout(autoSaveTimer);
- // autoSaveTimer = setTimeout(() => {
-   // luuDuLieu(false);
-  //}, 3000);
+  luuLocal(); // Vẫn lưu vào máy tính trước để an toàn
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  
+  // Đợi 2.5 giây sau khi ngừng thao tác mới gửi lên Server
+  autoSaveTimer = setTimeout(() => {
+    luuDuLieu(false); 
+  }, 2500); 
 }
 
+// Thay thế hàm luuDuLieu cũ bằng hàm này
 async function luuDuLieu(showAlert) {
   if (!WEB_APP_URL || WEB_APP_URL.includes("DÁN_URL")) {
     if (showAlert) alert("Chưa cấu hình URL!");
     return;
   }
   if (showAlert) document.getElementById('loading').style.display = 'flex';
+
   try {
-    const data = JSON.stringify(db);
-    const res = await fetch(`${WEB_APP_URL}?action=save&data=${encodeURIComponent(data)}`);
+    const payload = JSON.stringify(db);
+    
+    // Dùng phương thức POST thay vì GET để tránh giới hạn 50KB của URL
+    const res = await fetch(`${WEB_APP_URL}?action=save`, {
+      method: 'POST',
+      // Dùng text/plain để trình duyệt không chặn (CORS Preflight)
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payload
+    });
+    
     const result = await res.json();
     if (showAlert) {
       if (result.success) alert(`✅ Đã lưu! (${result.soCT} công tác, ${result.soHD} hoạt động)`);
@@ -888,6 +901,7 @@ async function luuDuLieu(showAlert) {
     if (showAlert) alert("Lỗi kết nối: " + e.message);
     else console.log("Auto-save failed:", e.message);
   }
+  
   if (showAlert) document.getElementById('loading').style.display = 'none';
 }
 
