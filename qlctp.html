@@ -34,7 +34,6 @@ button { background: #28a745; color: #fff; border: none; padding: 10px; border-r
 .btn-purple { background: #6f42c1; }
 .btn-sm { padding: 6px 10px; font-size: 12px; width: auto; }
 .btn-block { display: block; width: 100%; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .chip-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 6px 0; }
 .chip { padding: 8px 4px; border-radius: 15px; border: 2px solid #ccc; background: #f4f4f4; color: #666; font-size: 11px; cursor: pointer; text-align: center; font-weight: normal; user-select: none; }
@@ -67,8 +66,7 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
 
 .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
 .badge-chi { background: #f8d7da; color: #721c24; }
-.badge-tam-ung { background: #fff3cd; color: #856404; }
-.badge-dm { background: #d1ecf1; color: #0c5460; }
+.badge-thu { background: #d4edda; color: #155724; }
 
 .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .summary-table td { min-width: 70px; font-size: 11px; }
@@ -88,7 +86,6 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
 .info-row span:last-child { font-weight: bold; }
 .text-muted { color: #999; font-size: 12px; padding: 8px 0; }
 
-/* Modal */
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center; padding: 20px; }
 .modal.show { display: flex; }
 .modal-box { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 340px; }
@@ -130,7 +127,7 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
       </div>
       <div class="form-group">
         <label>Thời gian (chọn 1 lần):</label>
-        <input type="text" id="ctThoiGian" placeholder="Chọn ngày bắt đầu - kết thúc">
+        <input type="text" id="ctThoiGian" placeholder="Chọn ngày">
       </div>
       <div class="form-group">
         <label>Người tham gia:</label>
@@ -144,15 +141,15 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
 
     <div class="toolbar">
       <button class="btn-blue" onclick="moFormTaoCT()">➕ Tạo công tác</button>
-      <button class="btn-orange" onclick="saveToServer(true)">💾 Lưu</button>
-      <button class="btn-gray" onclick="loadFromServer(true)">🔄 Tải</button>
+      <button class="btn-orange" onclick="saveToServer(true)">💾 Lưu lên Cloud</button>
+      <button class="btn-gray" onclick="loadFromServer(true)">🔄 Tải từ Cloud</button>
     </div>
   </div>
 
   <!-- ============ TAB 1: TỔNG HỢP ============ -->
   <div class="tab-content" id="tab1">
     <div class="form-group">
-      <label>Chọn công tác cần tổng hợp:</label>
+      <label>Chọn công tác:</label>
       <div class="checkbox-group" id="chonCTTongHop"></div>
     </div>
 
@@ -181,19 +178,18 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
       <input type="text" id="dmTenMoi" placeholder="Tên danh mục mới" style="flex:2;">
       <button class="btn-blue" onclick="themDanhMuc()" style="flex:1;">➕ Thêm</button>
     </div>
-    <p class="text-muted">Xóa danh mục chỉ có tác dụng khi chưa có hoạt động nào dùng danh mục đó.</p>
   </div>
 </div>
 
-<!-- ============ MODAL CHIA ĐỀU ============ -->
+<!-- MODAL CHIA ĐỀU -->
 <div class="modal" id="modalChia">
   <div class="modal-box">
     <h3>⚖️ Chia đều tiền</h3>
     <div class="form-group">
       <label>Tổng tiền cần chia (VNĐ):</label>
-      <input type="tel" inputmode="numeric" id="inputChiaTong" placeholder="VD: 1000000" autocomplete="off">
+      <input type="tel" inputmode="numeric" id="inputChiaTong" placeholder="VD: 1000000">
     </div>
-    <p class="text-muted">Chia cho <b id="chiaSoNguoi">0</b> người. Số lẻ (nếu có) sẽ cộng vào những người đầu tiên.</p>
+    <p class="text-muted">Chia cho <b id="chiaSoNguoi">0</b> người. Số lẻ sẽ cộng vào những người đầu tiên.</p>
     <div class="modal-actions">
       <button class="btn-blue" onclick="xacNhanChia()">⚖️ Chia</button>
       <button class="btn-gray" onclick="closeModal('modalChia')">Hủy</button>
@@ -201,7 +197,7 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
   </div>
 </div>
 
-<!-- ============ MODAL MỞ KHÓA ============ -->
+<!-- MODAL MỞ KHÓA -->
 <div class="modal" id="modalMoKhoa">
   <div class="modal-box">
     <h3>🔓 Mở khóa công tác</h3>
@@ -220,31 +216,19 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============================================
-   CONFIG
-============================================ */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNy9XraPEoGZdIEkvJ2Vm1RKjkvB9Q2V1KP6MugkiRuca3Y9ivNA7zOPqJHrB6aZLG/exec";
+const WEB_APP_URL = "DÁN_URL_APPS_SCRIPT_VÀO_ĐÂY";
 const ADMIN_ID = "8";
 
-/* ============================================
-   STATE
-============================================ */
 let db = { nhanSu: [], danhMuc: [], congTac: {}, tamUng: {}, hoatDong: {} };
 let currentCTId = null;
 let currentCTTab = 'hoat_dong';
-let currentTHTab = 0;
 let openHDs = new Set();
 let nguoiTamCT = [];
 let chiaTargetHdId = null;
 let moKhoaTargetCTId = null;
 
-/* ============================================
-   HELPERS
-============================================ */
-function fmt(n) {
-  if (n === '' || n === null || n === undefined) return '';
-  return Number(n).toLocaleString('vi-VN');
-}
+/* HELPERS */
+function fmt(n) { if (n === '' || n === null || n === undefined) return ''; return Number(n).toLocaleString('vi-VN'); }
 function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
 function getShortName(full) { const p = full.trim().split(/\s+/); return p[p.length-1]; }
 function isFemale(name) { return name.includes("Thị"); }
@@ -252,41 +236,25 @@ function displayName(full) { return (isFemale(full) ? "Mrs." : "Mr.") + getShort
 function getNhanSu(id) { return db.nhanSu.find(n => String(n.id) === String(id)); }
 function getNameByNguoiId(id) { const n = getNhanSu(id); return n ? n.ten : '?'; }
 function displayByNguoiId(id) { const n = getNhanSu(id); return n ? displayName(n.ten) : '?'; }
-function getDanhMuc(id) { return db.danhMuc.find(d => d.id === id); }
-function getTenDanhMuc(id) { const d = getDanhMuc(id); return d ? d.ten : '(không rõ)'; }
-
+function getTenDanhMuc(id) { const d = db.danhMuc.find(x => x.id === id); return d ? d.ten : '(không rõ)'; }
+function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function fmtDate(iso) {
   if (!iso) return '';
-  const s = String(iso);
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  return s;
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
 }
-function chuyenNgay(str) {
-  if (!str) return '';
-  const s = String(str).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
-  return s;
-}
-function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2200);
-}
+function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-function showLoading(on) {
-  document.getElementById('loading').classList.toggle('show', on);
+function showLoading(on) { document.getElementById('loading').classList.toggle('show', on); }
+
+/* LOCAL STORAGE */
+function saveLocal() { localStorage.setItem('db_congtac_v2', JSON.stringify(db)); }
+function loadLocal() {
+  const s = localStorage.getItem('db_congtac_v2');
+  if (s) { try { db = JSON.parse(s); renderAll(); } catch(e){} }
 }
 
-/* ============================================
-   LOAD / SAVE
-============================================ */
+/* SERVER */
 async function loadFromServer(showAlert) {
   if (!WEB_APP_URL || WEB_APP_URL.includes('DÁN_URL')) {
     if (showAlert) alert('Chưa cấu hình WEB_APP_URL!');
@@ -297,15 +265,12 @@ async function loadFromServer(showAlert) {
     const res = await fetch(WEB_APP_URL + '?action=loadAll');
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    db.nhanSu = data.nhanSu || [];
-    db.danhMuc = data.danhMuc || [];
-    db.congTac = data.congTac || {};
-    db.tamUng = data.tamUng || {};
-    db.hoatDong = data.hoatDong || {};
+    db = { nhanSu: data.nhanSu||[], danhMuc: data.danhMuc||[], congTac: data.congTac||{}, tamUng: data.tamUng||{}, hoatDong: data.hoatDong||{} };
+    saveLocal();
     renderAll();
-    if (showAlert) toast('✅ Đã tải dữ liệu');
+    if (showAlert) toast('✅ Đã tải từ Cloud');
   } catch (e) {
-    alert('Lỗi tải: ' + e.message);
+    if (showAlert) alert('Lỗi tải: ' + e.message);
   }
   showLoading(false);
 }
@@ -324,34 +289,26 @@ async function saveToServer(showAlert) {
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    if (showAlert) toast(`✅ Đã lưu (${data.soCongTac} CT, ${data.soHoatDong} HĐ)`);
+    if (showAlert) toast(`✅ Đã lưu lên Cloud`);
   } catch (e) {
     if (showAlert) alert('Lỗi lưu: ' + e.message);
   }
   showLoading(false);
 }
 
-/* ============================================
-   TABS
-============================================ */
+/* TABS */
 function switchTab(i) {
   document.querySelectorAll('.tab-btn').forEach((b,k) => b.classList.toggle('active', k===i));
   document.querySelectorAll('.tab-content').forEach((c,k) => c.classList.toggle('active', k===i));
   if (i === 1) renderTongHop();
 }
-function switchCTTab(name) {
-  currentCTTab = name;
-  renderChiTietCT();
-}
+function switchCTTab(name) { currentCTTab = name; renderChiTietCT(); }
 function switchTHTab(i) {
-  currentTHTab = i;
   document.querySelectorAll('#tab1 .subtab-btn').forEach((b,k) => b.classList.toggle('active', k===i));
   document.querySelectorAll('#tab1 .subtab-content').forEach((c,k) => c.classList.toggle('active', k===i));
 }
 
-/* ============================================
-   RENDER ALL
-============================================ */
+/* RENDER ALL */
 function renderAll() {
   renderLocThang();
   renderDsCongTac();
@@ -367,7 +324,10 @@ function renderLocThang() {
   const cur = sel.value;
   const months = new Set();
   Object.values(db.congTac).forEach(ct => {
-    if (ct.tuNgay && /^\d{4}-\d{2}/.test(ct.tuNgay)) months.add(ct.tuNgay.slice(0,7));
+    if (ct.tuNgay && ct.tuNgay.length >= 7) {
+      const m = ct.tuNgay.slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(m)) months.add(m);
+    }
   });
   const arr = [...months].sort().reverse();
   sel.innerHTML = '<option value="">-- Tất cả --</option>' +
@@ -386,17 +346,18 @@ function renderDsCongTac() {
   list.sort((a,b) => (b.tuNgay||'').localeCompare(a.tuNgay||''));
 
   if (list.length === 0) {
-    container.innerHTML = '<p class="text-muted">Chưa có công tác nào. Bấm "➕ Tạo công tác" để bắt đầu.</p>';
+    container.innerHTML = '<p class="text-muted">Chưa có công tác nào.</p>';
     return;
   }
 
   container.innerHTML = list.map(ct => {
     const isOpen = ct.id === currentCTId;
     const isLocked = ct.trangThai === 'da_quyet_toan';
+    const dateStr = ct.tuNgay === ct.denNgay ? fmtDate(ct.tuNgay) : `${fmtDate(ct.tuNgay)} → ${fmtDate(ct.denNgay)}`;
     return `
       <div class="folder">
         <div class="folder-header ${isOpen?'open':''}" onclick="toggleCongTac('${ct.id}')">
-          <span>📁 ${ct.ten} (${fmtDate(ct.tuNgay)} → ${fmtDate(ct.denNgay)}) ${isLocked?'<span class="locked-badge">🔒 Đã khóa</span>':''}</span>
+          <span>📁 ${ct.ten} (${dateStr}) ${isLocked?'<span class="locked-badge">🔒 Khóa</span>':''}</span>
           <span class="arrow">▶</span>
         </div>
         <div class="folder-body ${isOpen?'open':''}" id="bodyCT_${ct.id}"></div>
@@ -413,9 +374,7 @@ function toggleCongTac(id) {
   renderDsCongTac();
 }
 
-/* ============================================
-   CHI TIẾT CÔNG TÁC
-============================================ */
+/* CHI TIẾT CÔNG TÁC */
 function renderChiTietCT() {
   if (!currentCTId) return;
   const ct = db.congTac[currentCTId];
@@ -444,7 +403,7 @@ function renderChiTietCT() {
   body.innerHTML = html;
 }
 
-/* ---------- TẠM ỨNG ---------- */
+/* TẠM ỨNG */
 function renderTamUng(ct, isLocked) {
   const list = Object.values(db.tamUng).filter(t => t.congTacId === ct.id);
   let html = '';
@@ -483,9 +442,6 @@ function renderTamUng(ct, isLocked) {
           <option value="chuyen_khoan">Chuyển khoản</option>
         </select>
       </div>
-      <div class="form-group"><label>Ghi chú:</label>
-        <input type="text" id="tuGhiChu" placeholder="(tùy chọn)">
-      </div>
       <button class="btn-blue" onclick="themTamUng()">✅ Thêm</button>
     </div>`;
   return html;
@@ -497,12 +453,10 @@ function themTamUng() {
   const soTien = Number(document.getElementById('tuSoTien').value) || 0;
   const ngay = document.getElementById('tuNgay').value || today();
   const hinhThuc = document.getElementById('tuHinhThuc').value;
-  const ghiChu = document.getElementById('tuGhiChu').value.trim();
-  if (!nguoiId) { alert('Chọn người!'); return; }
-  if (soTien <= 0) { alert('Nhập số tiền > 0!'); return; }
+  if (!nguoiId || soTien <= 0) { alert('Nhập đủ thông tin!'); return; }
   const id = genId();
-  db.tamUng[id] = { id, congTacId: ct.id, nguoiId, soTien, ngay, hinhThuc, ghiChu };
-  saveToServer(false);
+  db.tamUng[id] = { id, congTacId: ct.id, nguoiId, soTien, ngay, hinhThuc, ghiChu: '' };
+  saveLocal();
   renderChiTietCT();
   toast('✅ Đã thêm tạm ứng');
 }
@@ -510,12 +464,12 @@ function themTamUng() {
 function xoaTamUng(id) {
   if (!confirm('Xóa tạm ứng này?')) return;
   delete db.tamUng[id];
-  saveToServer(false);
+  saveLocal();
   renderChiTietCT();
   toast('Đã xóa');
 }
 
-/* ---------- HOẠT ĐỘNG ---------- */
+/* HOẠT ĐỘNG */
 function renderHoatDong(ct, isLocked) {
   const list = Object.values(db.hoatDong)
     .filter(h => h.congTacId === ct.id)
@@ -536,11 +490,14 @@ function renderHoatDong(ct, isLocked) {
     const isOpen = openHDs.has(h.id);
     let tong = 0;
     Object.values(h.chiTiet).forEach(v => tong += Number(v) || 0);
+    const badge = h.loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>';
+    const cls = h.loai === 'thu' ? 'thu' : 'chi';
+    
     html += `
       <div class="hd-item">
         <div class="hd-header ${isOpen?'open':''}" onclick="toggleHD('${h.id}')">
-          <span><span class="badge badge-chi">CHI</span> ${fmtDate(h.ngay)} - ${h.noiDung}</span>
-          <span><b>${fmt(tong)} đ</b> <span class="arrow">▶</span></span>
+          <span>${badge} ${fmtDate(h.ngay)} - ${h.noiDung}</span>
+          <span><b class="${cls}">${fmt(tong)} đ</b> <span class="arrow">▶</span></span>
         </div>
         <div class="hd-body ${isOpen?'open':''}" id="hdBody_${h.id}">
           ${renderHoatDongBody(h, ct, isLocked)}
@@ -555,7 +512,7 @@ function renderHoatDongBody(h, ct, isLocked) {
   const nguoiIds = Object.keys(h.chiTiet);
   if (nguoiIds.length === 0) {
     return isLocked ? '<p class="text-muted">Không có người.</p>' : `
-      <p class="text-muted">Chưa có người. </p>
+      <p class="text-muted">Chưa có người.</p>
       <button class="btn-sm btn-red" onclick="xoaHoatDong('${h.id}')">🗑️ Xóa HĐ</button>`;
   }
 
@@ -586,9 +543,9 @@ function renderHoatDongBody(h, ct, isLocked) {
   if (!isLocked) {
     html += `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
       <button class="btn-sm btn-purple" onclick="moChiaDeu('${h.id}')">⚖️ Chia đều</button>
-      <button class="btn-sm btn-orange" onclick="copyTuNguoiDau('${h.id}')">📋 Copy từ người đầu</button>
+      <button class="btn-sm btn-orange" onclick="copyTuNguoiDau('${h.id}')">📋 Copy</button>
       <button class="btn-sm btn-blue" onclick="moThemNguoiHD('${h.id}')">➕ Thêm người</button>
-      <button class="btn-sm btn-red" onclick="xoaHoatDong('${h.id}')">🗑️ Xóa HĐ</button>
+      <button class="btn-sm btn-red" onclick="xoaHoatDong('${h.id}')">🗑️ Xóa</button>
     </div>
     <div id="themNguoi_${h.id}" style="display:none; margin-top:8px; padding:8px; border:1px dashed #007bff; border-radius:4px;">
       <div class="chip-group" id="chipThem_${h.id}"></div>
@@ -609,8 +566,6 @@ function capNhatTienHD(hdId, nguoiId, val) {
   if (!h) return;
   const num = val.replace(/[^\d]/g, '');
   h.chiTiet[nguoiId] = num === '' ? 0 : Number(num);
-  h.ngaySua = today();
-  // Không save mỗi keystroke, chỉ update UI tổng
   const header = document.querySelector(`#hdBody_${hdId}`)?.parentElement?.querySelector('.hd-header b');
   if (header) {
     let tong = 0;
@@ -625,16 +580,14 @@ function chuanHoaTienHD(hdId, nguoiId, el) {
   const num = Number(el.value.replace(/[^\d]/g, '')) || 0;
   h.chiTiet[nguoiId] = num;
   el.value = num || '';
-  saveToServer(false);
+  saveLocal();
 }
 
 function xoaNguoiHD(hdId, nguoiId) {
   const h = db.hoatDong[hdId];
-  if (!h) return;
-  if (!confirm('Xóa ' + displayByNguoiId(nguoiId) + ' khỏi hoạt động?')) return;
+  if (!h || !confirm('Xóa người này?')) return;
   delete h.chiTiet[nguoiId];
-  h.ngaySua = today();
-  saveToServer(false);
+  saveLocal();
   openHDs.add(hdId);
   renderChiTietCT();
 }
@@ -647,64 +600,50 @@ function copyTuNguoiDau(hdId) {
   const firstVal = h.chiTiet[ids[0]] || 0;
   if (firstVal === 0) { alert('Người đầu chưa có số tiền!'); return; }
   ids.forEach(nid => h.chiTiet[nid] = firstVal);
-  h.ngaySua = today();
-  saveToServer(false);
+  saveLocal();
   openHDs.add(hdId);
   renderChiTietCT();
-  toast(`✅ Đã copy ${fmt(firstVal)}đ cho ${ids.length} người`);
+  toast(`✅ Đã copy ${fmt(firstVal)}đ`);
 }
 
 function moThemNguoiHD(hdId) {
   const h = db.hoatDong[hdId];
   const ct = db.congTac[currentCTId];
   if (!h || !ct) return;
-  const div = document.getElementById('themNguoi_' + hdId);
-  div.style.display = 'block';
+  document.getElementById('themNguoi_' + hdId).style.display = 'block';
   const conLai = ct.nguoi.filter(nid => !(nid in h.chiTiet));
   const chipDiv = document.getElementById('chipThem_' + hdId);
-  if (conLai.length === 0) {
-    chipDiv.innerHTML = '<p class="text-muted">Tất cả đã có trong hoạt động.</p>';
-  } else {
-    chipDiv.innerHTML = conLai.map(nid =>
-      `<div class="chip" data-id="${nid}" onclick="this.classList.toggle('selected')">${displayByNguoiId(nid)}</div>`
-    ).join('');
-  }
+  if (conLai.length === 0) chipDiv.innerHTML = '<p class="text-muted">Đã có đủ.</p>';
+  else chipDiv.innerHTML = conLai.map(nid => `<div class="chip" data-id="${nid}" onclick="this.classList.toggle('selected')">${displayByNguoiId(nid)}</div>`).join('');
 }
 
 function xacNhanThemNguoi(hdId) {
   const h = db.hoatDong[hdId];
   if (!h) return;
   document.querySelectorAll(`#chipThem_${hdId} .chip.selected`).forEach(c => {
-    const nid = c.getAttribute('data-id');
-    if (!(nid in h.chiTiet)) h.chiTiet[nid] = 0;
+    h.chiTiet[c.getAttribute('data-id')] = 0;
   });
-  h.ngaySua = today();
-  saveToServer(false);
+  saveLocal();
   openHDs.add(hdId);
   renderChiTietCT();
-  toast('Đã thêm người');
 }
 
 function xoaHoatDong(hdId) {
   if (!confirm('Xóa hoạt động này?')) return;
   delete db.hoatDong[hdId];
   openHDs.delete(hdId);
-  saveToServer(false);
+  saveLocal();
   renderChiTietCT();
-  toast('Đã xóa hoạt động');
 }
 
-/* ---------- CHIA ĐỀU ---------- */
 function moChiaDeu(hdId) {
   const h = db.hoatDong[hdId];
-  if (!h) return;
   const n = Object.keys(h.chiTiet).length;
   if (n === 0) { alert('Chưa có người để chia!'); return; }
   chiaTargetHdId = hdId;
   document.getElementById('chiaSoNguoi').innerText = n;
   document.getElementById('inputChiaTong').value = '';
   document.getElementById('modalChia').classList.add('show');
-  setTimeout(() => document.getElementById('inputChiaTong').focus(), 100);
 }
 
 function xacNhanChia() {
@@ -716,39 +655,39 @@ function xacNhanChia() {
   const n = ids.length;
   const moiNguoi = Math.floor(tong / n);
   const du = tong - moiNguoi * n;
-  ids.forEach((nid, i) => {
-    h.chiTiet[nid] = moiNguoi + (i < du ? 1 : 0);
-  });
-  h.ngaySua = today();
-  saveToServer(false);
+  ids.forEach((nid, i) => h.chiTiet[nid] = moiNguoi + (i < du ? 1 : 0));
+  saveLocal();
   closeModal('modalChia');
   openHDs.add(chiaTargetHdId);
   renderChiTietCT();
   toast(`⚖️ Đã chia ${fmt(tong)}đ cho ${n} người`);
 }
 
-/* ---------- THÊM HOẠT ĐỘNG ---------- */
 function moFormHoatDong() {
-  const ct = db.congTac[currentCTId];
-  if (!ct) return;
   const form = document.getElementById('formHoatDong');
   form.style.display = 'block';
   form.innerHTML = `
-    <h3 style="margin-top:0;">➕ Thêm hoạt động</h3>
+    <h3 style="margin-top:0;">Thêm hoạt động</h3>
     <div class="form-group"><label>Ngày:</label>
       <input type="date" id="hdNgay" value="${today()}">
     </div>
     <div class="form-group"><label>Nội dung:</label>
-      <input type="text" id="hdNoiDung" placeholder="VD: Ăn trưa, xăng xe...">
+      <input type="text" id="hdNoiDung" placeholder="VD: Ăn trưa...">
+    </div>
+    <div class="form-group"><label>Loại:</label>
+      <select id="hdLoai">
+        <option value="chi">Chi</option>
+        <option value="thu">Thu</option>
+      </select>
     </div>
     <div class="form-group"><label>Danh mục:</label>
       <select id="hdDanhMuc">
         ${db.danhMuc.filter(d=>d.active).map(d=>`<option value="${d.id}">${d.ten}</option>`).join('')}
       </select>
     </div>
-    <div class="form-group"><label>Chọn người tham gia:</label>
+    <div class="form-group"><label>Chọn người:</label>
       <div class="chip-group" id="hdNguoiChips"></div>
-      <button class="btn-sm btn-gray" onclick="chonTatCaHD()">Chọn tất cả</button>
+      <button class="btn-sm btn-gray" onclick="chonTatCaHD()">Tất cả</button>
       <button class="btn-sm btn-gray" onclick="boChonHD()">Bỏ chọn</button>
     </div>
     <button class="btn-blue" onclick="themHoatDong()">✅ Thêm</button>
@@ -775,78 +714,76 @@ function toggleNguoiHD(nid) {
   if (i >= 0) window._hdNguoiTam.splice(i, 1); else window._hdNguoiTam.push(nid);
   renderChipsHD();
 }
-function chonTatCaHD() {
-  const ct = db.congTac[currentCTId];
-  window._hdNguoiTam = [...ct.nguoi];
-  renderChipsHD();
-}
+function chonTatCaHD() { window._hdNguoiTam = [...db.congTac[currentCTId].nguoi]; renderChipsHD(); }
 function boChonHD() { window._hdNguoiTam = []; renderChipsHD(); }
 
 function themHoatDong() {
   const ct = db.congTac[currentCTId];
-  if (!ct) return;
   const ngay = document.getElementById('hdNgay').value || today();
   const noiDung = document.getElementById('hdNoiDung').value.trim();
   const danhMucId = document.getElementById('hdDanhMuc').value;
+  const loai = document.getElementById('hdLoai').value;
   if (!noiDung) { alert('Nhập nội dung!'); return; }
   if (!window._hdNguoiTam || window._hdNguoiTam.length === 0) { alert('Chọn ít nhất 1 người!'); return; }
   const id = genId();
   const chiTiet = {};
   window._hdNguoiTam.forEach(nid => chiTiet[nid] = 0);
-  db.hoatDong[id] = {
-    id, congTacId: ct.id, ngay, noiDung, danhMucId, chiTiet,
-    ngayTao: today(), ngaySua: today()
-  };
-  saveToServer(false);
+  db.hoatDong[id] = { id, congTacId: ct.id, ngay, noiDung, danhMucId, loai, chiTiet, ngayTao: today(), ngaySua: today() };
+  saveLocal();
   openHDs.add(id);
   renderChiTietCT();
   toast('✅ Đã thêm hoạt động');
 }
 
-/* ---------- QUYẾT TOÁN ---------- */
+/* QUYẾT TOÁN */
 function tinhTong(ctId) {
   const ct = db.congTac[ctId];
-  if (!ct) return { tamUng: {}, chi: {}, tongTU: 0, tongChi: 0 };
-  const tamUng = {}, chi = {};
-  ct.nguoi.forEach(nid => { tamUng[nid] = 0; chi[nid] = 0; });
+  if (!ct) return { tamUng: {}, thu: {}, chi: {}, tongTU: 0, tongThu: 0, tongChi: 0 };
+  const tamUng = {}, thu = {}, chi = {};
+  ct.nguoi.forEach(nid => { tamUng[nid] = 0; thu[nid] = 0; chi[nid] = 0; });
   Object.values(db.tamUng).filter(t => t.congTacId === ctId).forEach(t => {
-    if (!(t.nguoiId in tamUng)) { tamUng[t.nguoiId] = 0; chi[t.nguoiId] = 0; }
+    if (!(t.nguoiId in tamUng)) { tamUng[t.nguoiId] = 0; thu[t.nguoiId] = 0; chi[t.nguoiId] = 0; }
     tamUng[t.nguoiId] += Number(t.soTien) || 0;
   });
   Object.values(db.hoatDong).filter(h => h.congTacId === ctId).forEach(h => {
     Object.entries(h.chiTiet).forEach(([nid, v]) => {
-      if (!(nid in chi)) { tamUng[nid] = 0; chi[nid] = 0; }
-      chi[nid] += Number(v) || 0;
+      if (!(nid in chi)) { tamUng[nid] = 0; thu[nid] = 0; chi[nid] = 0; }
+      const val = Number(v) || 0;
+      if (h.loai === 'thu') thu[nid] += val;
+      else chi[nid] += val;
     });
   });
-  let tongTU = 0, tongChi = 0;
+  let tongTU = 0, tongThu = 0, tongChi = 0;
   Object.values(tamUng).forEach(v => tongTU += v);
+  Object.values(thu).forEach(v => tongThu += v);
   Object.values(chi).forEach(v => tongChi += v);
-  return { tamUng, chi, tongTU, tongChi };
+  return { tamUng, thu, chi, tongTU, tongThu, tongChi };
 }
 
 function renderQuyetToan(ct, isLocked) {
   const t = tinhTong(ct.id);
-  const chenhLech = t.tongTU - t.tongChi;
-  const allNguoi = new Set([...Object.keys(t.tamUng), ...Object.keys(t.chi)]);
+  const chenhLech = t.tongTU + t.tongThu - t.tongChi;
+  const allNguoi = new Set([...Object.keys(t.tamUng), ...Object.keys(t.chi), ...Object.keys(t.thu)]);
   const ids = [...allNguoi];
 
   let html = `
     <div class="scroll-x">
       <table class="summary-table">
-        <thead><tr><th class="name-col">Người</th><th>Tạm ứng</th><th>Đã chi</th><th>Còn lại</th></tr></thead>
+        <thead><tr><th class="name-col">Người</th><th>Tạm ứng</th><th>Thu</th><th>Chi</th><th>Còn lại</th></tr></thead>
         <tbody>
   `;
   ids.forEach(nid => {
     const tu = t.tamUng[nid] || 0;
+    const th = t.thu[nid] || 0;
     const ch = t.chi[nid] || 0;
-    const cl = tu - ch;
-    const color = cl > 0 ? '#28a745' : (cl < 0 ? '#dc3545' : '#333');
+    const cl = tu + th - ch;
+    const color = cl >= 0 ? '#28a745' : '#dc3545';
     const label = cl > 0 ? 'Hoàn ứng' : (cl < 0 ? 'Chi bù' : 'Khớp');
     html += `<tr>
       <td class="name-col">${displayByNguoiId(nid)}</td>
       <td>${fmt(tu)}</td>
-      <td>${fmt(ch)}</td>
+      <td class="thu">${fmt(th)}</td>
+      <td class="chi">${fmt(ch)}</td>
       <td style="color:${color}; font-weight:bold;">${fmt(cl)} <span style="font-size:10px;">(${label})</span></td>
     </tr>`;
   });
@@ -855,7 +792,8 @@ function renderQuyetToan(ct, isLocked) {
         <tr style="background:#fff3cd; font-weight:bold;">
           <td class="name-col">TỔNG</td>
           <td>${fmt(t.tongTU)}</td>
-          <td>${fmt(t.tongChi)}</td>
+          <td class="thu">${fmt(t.tongThu)}</td>
+          <td class="chi">${fmt(t.tongChi)}</td>
           <td style="color:${chenhLech>=0?'#28a745':'#dc3545'};">${fmt(chenhLech)}</td>
         </tr>
       </tfoot>
@@ -871,7 +809,6 @@ function renderQuyetToan(ct, isLocked) {
   } else {
     html += `
       <button class="btn-orange btn-block" style="margin-top:12px;" onclick="quyetToan('${ct.id}')">🔒 Quyết toán & Khóa sổ</button>
-      <p class="text-muted">Sau khi quyết toán, công tác sẽ bị khóa. Chỉ admin (ID=${ADMIN_ID}) mới mở lại được.</p>
     `;
   }
   return html;
@@ -879,17 +816,13 @@ function renderQuyetToan(ct, isLocked) {
 
 function quyetToan(ctId) {
   const t = tinhTong(ctId);
-  const chenh = t.tongTU - t.tongChi;
-  const msg = `XÁC NHẬN QUYẾT TOÁN\n\n` +
-    `Tổng tạm ứng: ${fmt(t.tongTU)} đ\n` +
-    `Tổng chi:     ${fmt(t.tongChi)} đ\n` +
-    `Chênh lệch:   ${fmt(chenh)} đ ${chenh>=0?'(nhân viên hoàn ứng)':'(công ty chi bù)'}\n\n` +
-    `Sau khi quyết toán, công tác sẽ BỊ KHÓA. Tiếp tục?`;
+  const chenh = t.tongTU + t.tongThu - t.tongChi;
+  const msg = `XÁC NHẬN QUYẾT TOÁN\n\nTổng TƯ: ${fmt(t.tongTU)} đ\nTổng Thu: ${fmt(t.tongThu)} đ\nTổng Chi: ${fmt(t.tongChi)} đ\nChênh lệch: ${fmt(chenh)} đ\n\nSau khi quyết toán, công tác sẽ BỊ KHÓA. Tiếp tục?`;
   if (!confirm(msg)) return;
   const ct = db.congTac[ctId];
   ct.trangThai = 'da_quyet_toan';
   ct.ngayQuyetToan = today();
-  saveToServer(false);
+  saveLocal();
   renderDsCongTac();
   toast('🔒 Đã quyết toán và khóa sổ');
 }
@@ -911,27 +844,25 @@ function xacNhanMoKhoa() {
   if (!ct) return;
   ct.trangThai = 'moi_tao';
   ct.ngayQuyetToan = '';
-  saveToServer(false);
+  saveLocal();
   closeModal('modalMoKhoa');
   renderDsCongTac();
   toast('🔓 Đã mở khóa công tác');
 }
 
-/* ============================================
-   TẠO / XÓA CÔNG TÁC
-============================================ */
+/* TẠO / XÓA CÔNG TÁC */
 function moFormTaoCT() {
   document.getElementById('formTaoCT').style.display = 'block';
   nguoiTamCT = [];
   renderChipsTaoCT();
   if (!window._fpCT) {
     window._fpCT = flatpickr("#ctThoiGian", {
-      mode: "range", dateFormat: "d/m/Y", locale: "vn",
-      onChange: (dates, str) => {
-        if (str.includes(" to ")) {
-          document.getElementById('ctThoiGian').value = str.replace(" to ", " - ");
-        }
-      }
+      mode: "range",
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d/m/Y",
+      locale: "vn",
+      onChange: (selectedDates) => { window._selectedDates = selectedDates; }
     });
   }
 }
@@ -953,29 +884,35 @@ function toggleNguoiCT(id) {
 function chonTatCaNguoi() { nguoiTamCT = db.nhanSu.map(n => String(n.id)); renderChipsTaoCT(); }
 function boChonTatCa() { nguoiTamCT = []; renderChipsTaoCT(); }
 
+function getISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
 function taoCongTac() {
   const ten = document.getElementById('ctTen').value.trim();
-  const thoiGian = document.getElementById('ctThoiGian').value.trim();
   if (!ten) { alert('Nhập tên công tác!'); return; }
-  if (!thoiGian) { alert('Chọn thời gian!'); return; }
+  
   let tuNgay = '', denNgay = '';
-  const parts = thoiGian.split(' - ');
-  if (parts.length === 2) {
-    tuNgay = chuyenNgay(parts[0].trim());
-    denNgay = chuyenNgay(parts[1].trim());
+  if (window._selectedDates && window._selectedDates.length > 0) {
+    tuNgay = getISODate(window._selectedDates[0]);
+    denNgay = window._selectedDates[1] ? getISODate(window._selectedDates[1]) : tuNgay;
   } else {
-    tuNgay = chuyenNgay(thoiGian);
-    denNgay = tuNgay;
+    alert('Vui lòng chọn thời gian!'); return;
   }
+
   if (nguoiTamCT.length === 0) { alert('Chọn ít nhất 1 người!'); return; }
+  
   const id = genId();
   db.congTac[id] = {
     id, ten, tuNgay, denNgay, trangThai: 'moi_tao',
     nguoi: [...nguoiTamCT], ngayTao: today(), ngayQuyetToan: ''
   };
-  saveToServer(false);
+  saveLocal();
   document.getElementById('ctTen').value = '';
-  if (window._fpCT) window._fpCT.clear();
+  if (window._fpCT) { window._fpCT.clear(); window._selectedDates = null; }
   nguoiTamCT = [];
   document.getElementById('formTaoCT').style.display = 'none';
   currentCTId = id;
@@ -987,20 +924,17 @@ function taoCongTac() {
 function xoaCongTac(id) {
   const ct = db.congTac[id];
   if (!confirm('Xóa công tác "' + ct.ten + '" và toàn bộ dữ liệu bên trong?')) return;
-  // Xóa tạm ứng + hoạt động liên quan
   Object.values(db.tamUng).filter(t => t.congTacId === id).forEach(t => delete db.tamUng[t.id]);
   Object.values(db.hoatDong).filter(h => h.congTacId === id).forEach(h => delete db.hoatDong[h.id]);
   delete db.congTac[id];
   if (currentCTId === id) currentCTId = null;
-  saveToServer(false);
+  saveLocal();
   renderLocThang();
   renderDsCongTac();
   toast('Đã xóa công tác');
 }
 
-/* ============================================
-   TỔNG HỢP
-============================================ */
+/* TỔNG HỢP */
 function renderTongHopCheckbox() {
   const c = document.getElementById('chonCTTongHop');
   if (!c) return;
@@ -1035,45 +969,50 @@ function renderBangTheoNguoi() {
   const c = document.getElementById('bangTongHopNguoi');
   if (ctList.length === 0) { c.innerHTML = '<p class="text-muted">Chưa chọn công tác.</p>'; return; }
 
-  // Tổng hợp
   const nguoiSet = new Set();
-  const tongTU = {}, tongChi = {};
+  const tongTU = {}, tongThu = {}, tongChi = {};
   ctList.forEach(ct => ct.nguoi.forEach(nid => nguoiSet.add(nid)));
+  
   Object.values(db.tamUng).forEach(t => {
     if (!ctList.find(ct => ct.id === t.congTacId)) return;
     nguoiSet.add(t.nguoiId);
     tongTU[t.nguoiId] = (tongTU[t.nguoiId] || 0) + (Number(t.soTien)||0);
   });
+  
   Object.values(db.hoatDong).forEach(h => {
     if (!ctList.find(ct => ct.id === h.congTacId)) return;
     Object.entries(h.chiTiet).forEach(([nid, v]) => {
       nguoiSet.add(nid);
-      tongChi[nid] = (tongChi[nid] || 0) + (Number(v)||0);
+      const val = Number(v)||0;
+      if (h.loai === 'thu') tongThu[nid] = (tongThu[nid]||0) + val;
+      else tongChi[nid] = (tongChi[nid]||0) + val;
     });
   });
 
   const ids = [...nguoiSet];
   let html = `<table class="summary-table"><thead><tr>
-    <th class="name-col">Người</th><th>Tạm ứng</th><th>Đã chi</th><th>Còn lại</th>
+    <th class="name-col">Người</th><th>Tạm ứng</th><th>Thu</th><th>Chi</th><th>Còn lại</th>
   </tr></thead><tbody>`;
-  let tTU = 0, tChi = 0;
+  let tTU = 0, tThu = 0, tChi = 0;
   ids.forEach(nid => {
     const tu = tongTU[nid] || 0;
+    const th = tongThu[nid] || 0;
     const ch = tongChi[nid] || 0;
-    const cl = tu - ch;
-    tTU += tu; tChi += ch;
+    const cl = tu + th - ch;
+    tTU += tu; tThu += th; tChi += ch;
     html += `<tr>
       <td class="name-col">${displayByNguoiId(nid)}</td>
       <td>${fmt(tu)}</td>
-      <td>${fmt(ch)}</td>
+      <td class="thu">${fmt(th)}</td>
+      <td class="chi">${fmt(ch)}</td>
       <td style="color:${cl>=0?'#28a745':'#dc3545'}; font-weight:bold;">${fmt(cl)}</td>
     </tr>`;
   });
   html += `</tbody><tfoot>
     <tr style="background:#fff3cd; font-weight:bold;">
       <td class="name-col">TỔNG</td>
-      <td>${fmt(tTU)}</td><td>${fmt(tChi)}</td>
-      <td>${fmt(tTU - tChi)}</td>
+      <td>${fmt(tTU)}</td><td class="thu">${fmt(tThu)}</td><td class="chi">${fmt(tChi)}</td>
+      <td>${fmt(tTU + tThu - tChi)}</td>
     </tr>
   </tfoot></table>`;
   c.innerHTML = html;
@@ -1085,21 +1024,22 @@ function renderBangTheoDanhMuc() {
   if (ctList.length === 0) { c.innerHTML = '<p class="text-muted">Chưa chọn công tác.</p>'; return; }
   const ctIds = new Set(ctList.map(ct => ct.id));
 
-  // Pivot: danh mục × người
   const dmMap = {};
   const nguoiSet = new Set();
+  
   Object.values(db.hoatDong).forEach(h => {
     if (!ctIds.has(h.congTacId)) return;
     const dmId = h.danhMucId || 'khac';
-    if (!dmMap[dmId]) dmMap[dmId] = {};
+    const key = dmId + '_' + h.loai;
+    if (!dmMap[key]) dmMap[key] = {};
     Object.entries(h.chiTiet).forEach(([nid, v]) => {
       nguoiSet.add(nid);
-      dmMap[dmId][nid] = (dmMap[dmId][nid] || 0) + (Number(v)||0);
+      dmMap[key][nid] = (dmMap[key][nid] || 0) + (Number(v)||0);
     });
   });
 
   if (Object.keys(dmMap).length === 0) {
-    c.innerHTML = '<p class="text-muted">Chưa có dữ liệu chi.</p>'; return;
+    c.innerHTML = '<p class="text-muted">Chưa có dữ liệu.</p>'; return;
   }
   const nguoiIds = [...nguoiSet];
 
@@ -1110,9 +1050,12 @@ function renderBangTheoDanhMuc() {
   </tr></thead><tbody>`;
 
   const tongDm = {};
-  Object.entries(dmMap).forEach(([dmId, map]) => {
+  Object.entries(dmMap).forEach(([key, map]) => {
     let tong = 0;
-    let row = `<td class="name-col">${getTenDanhMuc(dmId)}</td>`;
+    const [dmId, loai] = key.split('_');
+    const badge = loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>';
+    let row = `<td class="name-col">${badge} ${getTenDanhMuc(dmId)}</td>`;
+    
     nguoiIds.forEach(nid => {
       const v = map[nid] || 0;
       tong += v;
@@ -1120,10 +1063,9 @@ function renderBangTheoDanhMuc() {
     });
     row += `<td style="font-weight:bold;">${fmt(tong)}</td>`;
     html += `<tr>${row}</tr>`;
-    tongDm[dmId] = tong;
+    tongDm[key] = tong;
   });
 
-  // Tổng theo người
   let totalRow = `<td class="name-col" style="background:#fff3cd;">TỔNG</td>`;
   let grandTotal = 0;
   nguoiIds.forEach(nid => {
@@ -1138,21 +1080,19 @@ function renderBangTheoDanhMuc() {
   c.innerHTML = html;
 }
 
-/* ============================================
-   CẤU HÌNH DANH MỤC
-============================================ */
+/* CẤU HÌNH DANH MỤC */
 function renderDanhMucCauHinh() {
   const c = document.getElementById('dsDanhMuc');
   if (!c) return;
   if (db.danhMuc.length === 0) { c.innerHTML = '<p class="text-muted">Chưa có danh mục.</p>'; return; }
   c.innerHTML = `<div class="scroll-x"><table>
-    <thead><tr><th>STT</th><th style="text-align:left;">Tên</th><th>Trạng thái</th><th></th></tr></thead>
+    <thead><tr><th>STT</th><th style="text-align:left;">Tên</th><th>Loại</th><th></th></tr></thead>
     <tbody>
     ${db.danhMuc.map((d,i) => `
       <tr>
         <td>${i+1}</td>
         <td style="text-align:left;">${d.ten}</td>
-        <td>${d.active ? '✅' : '⏸️'}</td>
+        <td>${d.loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>'}</td>
         <td><button class="btn-sm btn-red" onclick="xoaDanhMuc('${d.id}')">✖</button></td>
       </tr>`).join('')}
     </tbody></table></div>`;
@@ -1164,31 +1104,27 @@ function themDanhMuc() {
   const id = 'dm_' + Date.now();
   db.danhMuc.push({ id, ten, loai: 'chi', active: true });
   document.getElementById('dmTenMoi').value = '';
-  saveToServer(false);
+  saveLocal();
   renderDanhMucCauHinh();
   toast('✅ Đã thêm danh mục');
 }
 
 function xoaDanhMuc(id) {
-  // Kiểm tra có hoạt động nào dùng không
   const used = Object.values(db.hoatDong).some(h => h.danhMucId === id);
   if (used) { alert('Danh mục đang được dùng trong hoạt động. Không thể xóa!'); return; }
   if (!confirm('Xóa danh mục này?')) return;
   db.danhMuc = db.danhMuc.filter(d => d.id !== id);
-  saveToServer(false);
+  saveLocal();
   renderDanhMucCauHinh();
   toast('Đã xóa danh mục');
 }
 
-/* ============================================
-   XUẤT EXCEL
-============================================ */
+/* XUẤT EXCEL */
 function xuatExcel() {
   const ctList = getSelectedCT();
   if (ctList.length === 0) { alert('Chưa chọn công tác!'); return; }
   const ctIds = new Set(ctList.map(ct => ct.id));
 
-  // Sheet 1: Chi tiết hoạt động
   const nguoiSet = new Set();
   ctList.forEach(ct => ct.nguoi.forEach(nid => nguoiSet.add(nid)));
   Object.values(db.hoatDong).forEach(h => {
@@ -1197,14 +1133,14 @@ function xuatExcel() {
   });
   const nguoiIds = [...nguoiSet];
 
-  const header = ['STT', 'Công tác', 'Ngày', 'Nội dung', 'Danh mục', ...nguoiIds.map(displayByNguoiId), 'Tổng'];
+  const header = ['STT', 'Công tác', 'Ngày', 'Nội dung', 'Danh mục', 'Loại', ...nguoiIds.map(displayByNguoiId), 'Tổng'];
   const rows = [header];
 
   const hdArr = Object.values(db.hoatDong).filter(h => ctIds.has(h.congTacId))
     .sort((a,b) => (a.ngay||'').localeCompare(b.ngay||''));
   hdArr.forEach((h, i) => {
     let tong = 0;
-    const row = [i+1, db.congTac[h.congTacId]?.ten || '', fmtDate(h.ngay), h.noiDung, getTenDanhMuc(h.danhMucId)];
+    const row = [i+1, db.congTac[h.congTacId]?.ten || '', fmtDate(h.ngay), h.noiDung, getTenDanhMuc(h.danhMucId), h.loai === 'thu' ? 'THU' : 'CHI'];
     nguoiIds.forEach(nid => {
       const v = h.chiTiet[nid] || 0;
       tong += v;
@@ -1214,8 +1150,7 @@ function xuatExcel() {
     rows.push(row);
   });
 
-  // Tổng theo người
-  const tongTU = {}, tongChi = {};
+  const tongTU = {}, tongThu = {}, tongChi = {};
   Object.values(db.tamUng).forEach(t => {
     if (!ctIds.has(t.congTacId)) return;
     tongTU[t.nguoiId] = (tongTU[t.nguoiId]||0) + (Number(t.soTien)||0);
@@ -1223,23 +1158,30 @@ function xuatExcel() {
   Object.values(db.hoatDong).forEach(h => {
     if (!ctIds.has(h.congTacId)) return;
     Object.entries(h.chiTiet).forEach(([nid, v]) => {
-      tongChi[nid] = (tongChi[nid]||0) + (Number(v)||0);
+      const val = Number(v)||0;
+      if (h.loai === 'thu') tongThu[nid] = (tongThu[nid]||0) + val;
+      else tongChi[nid] = (tongChi[nid]||0) + val;
     });
   });
 
-  const rowTU = ['','','','','TỔNG TẠM ỨNG'];
+  const rowTU = ['','','','','','TỔNG TẠM ỨNG'];
   nguoiIds.forEach(nid => rowTU.push(tongTU[nid] || 0));
   rowTU.push(Object.values(tongTU).reduce((a,b)=>a+b,0));
   rows.push(rowTU);
 
-  const rowChi = ['','','','','TỔNG CHI'];
+  const rowThu = ['','','','','','TỔNG THU'];
+  nguoiIds.forEach(nid => rowThu.push(tongThu[nid] || 0));
+  rowThu.push(Object.values(tongThu).reduce((a,b)=>a+b,0));
+  rows.push(rowThu);
+
+  const rowChi = ['','','','','','TỔNG CHI'];
   nguoiIds.forEach(nid => rowChi.push(tongChi[nid] || 0));
   rowChi.push(Object.values(tongChi).reduce((a,b)=>a+b,0));
   rows.push(rowChi);
 
-  const rowCL = ['','','','','CÒN LẠI'];
-  nguoiIds.forEach(nid => rowCL.push((tongTU[nid]||0) - (tongChi[nid]||0)));
-  rowCL.push(Object.values(tongTU).reduce((a,b)=>a+b,0) - Object.values(tongChi).reduce((a,b)=>a+b,0));
+  const rowCL = ['','','','','','CÒN LẠI'];
+  nguoiIds.forEach(nid => rowCL.push((tongTU[nid]||0) + (tongThu[nid]||0) - (tongChi[nid]||0)));
+  rowCL.push(Object.values(tongTU).reduce((a,b)=>a+b,0) + Object.values(tongThu).reduce((a,b)=>a+b,0) - Object.values(tongChi).reduce((a,b)=>a+b,0));
   rows.push(rowCL);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -1248,11 +1190,12 @@ function xuatExcel() {
   XLSX.writeFile(wb, `CongTac_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-/* ============================================
-   INIT
-============================================ */
+/* INIT */
 window.onload = function() {
-  loadFromServer(false);
+  loadLocal();
+  if (!db.nhanSu || db.nhanSu.length === 0) {
+    loadFromServer(false); // Chỉ tải tự động lần đầu khi máy chưa có dữ liệu
+  }
 };
 </script>
 </body>
