@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Quản Lý Công Tác V2</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+
+<style>
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: #f0f2f5; margin: 0; padding: 8px; }
+.container { max-width: 100%; background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+h1 { color: #c00; text-align: center; font-size: 19px; margin: 0 0 10px; text-transform: uppercase; }
+h3 { color: #0056b3; border-bottom: 2px solid #007bff; padding-bottom: 4px; margin: 14px 0 8px; font-size: 15px; }
+
+.tabs, .subtabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+.tab-btn, .subtab-btn { flex: 1; padding: 9px 6px; background: #e9ecef; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; min-width: 0; }
+.tab-btn.active, .subtab-btn.active { background: #007bff; color: #fff; }
+.tab-content, .subtab-content { display: none; }
+.tab-content.active, .subtab-content.active { display: block; }
+
+.form-group { margin-bottom: 10px; }
+label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 3px; color: #c00; }
+input, select, textarea { width: 100%; padding: 9px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: #fff; }
+input[type="tel"], input[type="number"] { text-align: right; }
+button { background: #28a745; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin: 2px 0; touch-action: manipulation; }
+.btn-blue { background: #007bff; } .btn-red { background: #dc3545; }
+.btn-orange { background: #fd7e14; } .btn-gray { background: #6c757d; }
+.btn-purple { background: #6f42c1; }
+.btn-sm { padding: 6px 10px; font-size: 12px; width: auto; }
+.btn-block { display: block; width: 100%; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.chip-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 6px 0; }
+.chip { padding: 8px 4px; border-radius: 15px; border: 2px solid #ccc; background: #f4f4f4; color: #666; font-size: 11px; cursor: pointer; text-align: center; font-weight: normal; user-select: none; }
+.chip.selected { background: #007bff; color: #fff; border-color: #007bff; font-weight: bold; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 5px; }
+th, td { border: 1px solid #999; padding: 4px; text-align: center; }
+th { background: #e9ecef; font-size: 11px; }
+td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; text-align: right; }
+.money-input { width: 90px !important; }
+.thu { color: #28a745; font-weight: bold; }
+.chi { color: #dc3545; font-weight: bold; }
+
+.folder { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+.folder-header { background: #e7f3ff; padding: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #0056b3; font-size: 13px; gap: 6px; }
+.folder-header:hover { background: #d0e7ff; }
+.folder-header .arrow { transition: transform 0.2s; flex-shrink: 0; }
+.folder-header.open .arrow { transform: rotate(90deg); }
+.folder-body { display: none; padding: 10px; background: #fafafa; }
+.folder-body.open { display: block; }
+.locked-badge { background: #dc3545; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: normal; }
+
+.hd-item { border: 1px solid #ccc; border-radius: 6px; margin-bottom: 8px; background: #fff; }
+.hd-header { padding: 8px; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 12px; gap: 6px; }
+.hd-header:hover { background: #e9ecef; }
+.hd-header.open .arrow { transform: rotate(90deg); }
+.hd-header .arrow { transition: transform 0.2s; flex-shrink: 0; }
+.hd-body { display: none; padding: 8px; border-top: 1px solid #eee; }
+.hd-body.open { display: block; }
+
+.badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+.badge-chi { background: #f8d7da; color: #721c24; }
+.badge-tam-ung { background: #fff3cd; color: #856404; }
+.badge-dm { background: #d1ecf1; color: #0c5460; }
+
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.summary-table td { min-width: 70px; font-size: 11px; }
+.summary-table .name-col { min-width: 100px; text-align: left; font-weight: bold; }
+
+#loading { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; font-size: 18px; color: #007bff; font-weight: bold; }
+#loading.show { display: flex; }
+
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 15px; border-top: 2px solid #eee; padding-top: 12px; }
+.toolbar button { flex: 1; min-width: 100px; }
+
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin: 5px 0; }
+.checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 12px; }
+.checkbox-item input { width: auto; }
+
+.info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 13px; }
+.info-row span:last-child { font-weight: bold; }
+.text-muted { color: #999; font-size: 12px; padding: 8px 0; }
+
+/* Modal */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center; padding: 20px; }
+.modal.show { display: flex; }
+.modal-box { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 340px; }
+.modal-box h3 { margin-top: 0; }
+.modal-actions { display: flex; gap: 8px; margin-top: 12px; }
+.modal-actions button { flex: 1; }
+
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 10000; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📋 CÔNG TÁC V2</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">📁 Công tác</button>
+    <button class="tab-btn" onclick="switchTab(1)">📊 Tổng hợp</button>
+    <button class="tab-btn" onclick="switchTab(2)">⚙️ Cấu hình</button>
+  </div>
+
+  <!-- ============ TAB 0: CÔNG TÁC ============ -->
+  <div class="tab-content active" id="tab0">
+    <div class="form-group">
+      <label>Lọc theo tháng:</label>
+      <select id="locThang" onchange="renderDsCongTac()">
+        <option value="">-- Tất cả --</option>
+      </select>
+    </div>
+
+    <div id="dsCongTac"></div>
+
+    <div id="formTaoCT" style="display:none; border:1px solid #007bff; border-radius:8px; padding:10px; margin-top:10px; background:#f0f8ff;">
+      <h3 style="margin-top:0;">➕ Tạo công tác mới</h3>
+      <div class="form-group">
+        <label>Tên công tác:</label>
+        <input type="text" id="ctTen" placeholder="VD: Vĩnh Tân">
+      </div>
+      <div class="form-group">
+        <label>Thời gian (chọn 1 lần):</label>
+        <input type="text" id="ctThoiGian" placeholder="Chọn ngày bắt đầu - kết thúc">
+      </div>
+      <div class="form-group">
+        <label>Người tham gia:</label>
+        <div class="chip-group" id="ctNguoiChips"></div>
+        <button class="btn-sm btn-gray" onclick="chonTatCaNguoi()">Chọn tất cả</button>
+        <button class="btn-sm btn-gray" onclick="boChonTatCa()">Bỏ chọn</button>
+      </div>
+      <button class="btn-blue" onclick="taoCongTac()">✅ Tạo công tác</button>
+      <button class="btn-gray" onclick="document.getElementById('formTaoCT').style.display='none'">Hủy</button>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn-blue" onclick="moFormTaoCT()">➕ Tạo công tác</button>
+      <button class="btn-orange" onclick="saveToServer(true)">💾 Lưu</button>
+      <button class="btn-gray" onclick="loadFromServer(true)">🔄 Tải</button>
+    </div>
+  </div>
+
+  <!-- ============ TAB 1: TỔNG HỢP ============ -->
+  <div class="tab-content" id="tab1">
+    <div class="form-group">
+      <label>Chọn công tác cần tổng hợp:</label>
+      <div class="checkbox-group" id="chonCTTongHop"></div>
+    </div>
+
+    <div class="subtabs">
+      <button class="subtab-btn active" onclick="switchTHTab(0)">👤 Theo người</button>
+      <button class="subtab-btn" onclick="switchTHTab(1)">📂 Theo danh mục</button>
+    </div>
+
+    <div class="subtab-content active" id="thTab0">
+      <h3>Bảng tổng hợp theo người</h3>
+      <div class="scroll-x" id="bangTongHopNguoi"></div>
+    </div>
+    <div class="subtab-content" id="thTab1">
+      <h3>Bảng tổng hợp theo danh mục</h3>
+      <div class="scroll-x" id="bangTongHopDanhMuc"></div>
+    </div>
+
+    <button class="btn-orange btn-block" style="margin-top:12px;" onclick="xuatExcel()">📥 Xuất Excel</button>
+  </div>
+
+  <!-- ============ TAB 2: CẤU HÌNH ============ -->
+  <div class="tab-content" id="tab2">
+    <h3>⚙️ Quản lý danh mục chi phí</h3>
+    <div id="dsDanhMuc"></div>
+    <div style="display:flex; gap:6px; margin-top:10px;">
+      <input type="text" id="dmTenMoi" placeholder="Tên danh mục mới" style="flex:2;">
+      <button class="btn-blue" onclick="themDanhMuc()" style="flex:1;">➕ Thêm</button>
+    </div>
+    <p class="text-muted">Xóa danh mục chỉ có tác dụng khi chưa có hoạt động nào dùng danh mục đó.</p>
+  </div>
+</div>
+
+<!-- ============ MODAL CHIA ĐỀU ============ -->
+<div class="modal" id="modalChia">
+  <div class="modal-box">
+    <h3>⚖️ Chia đều tiền</h3>
+    <div class="form-group">
+      <label>Tổng tiền cần chia (VNĐ):</label>
+      <input type="tel" inputmode="numeric" id="inputChiaTong" placeholder="VD: 1000000" autocomplete="off">
+    </div>
+    <p class="text-muted">Chia cho <b id="chiaSoNguoi">0</b> người. Số lẻ (nếu có) sẽ cộng vào những người đầu tiên.</p>
+    <div class="modal-actions">
+      <button class="btn-blue" onclick="xacNhanChia()">⚖️ Chia</button>
+      <button class="btn-gray" onclick="closeModal('modalChia')">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL MỞ KHÓA ============ -->
+<div class="modal" id="modalMoKhoa">
+  <div class="modal-box">
+    <h3>🔓 Mở khóa công tác</h3>
+    <p style="font-size:13px;">Chọn người có quyền mở khóa:</p>
+    <div class="form-group">
+      <select id="selectNguoiMoKhoa"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-red" onclick="xacNhanMoKhoa()">🔓 Mở khóa</button>
+      <button class="btn-gray" onclick="closeModal('modalMoKhoa')">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading">⏳ Đang xử lý...</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================
+   CONFIG
+============================================ */
+const WEB_APP_URL = "DÁN_URL_APPS_SCRIPT_VÀO_ĐÂY";
+const ADMIN_ID = "8";
+
+/* ============================================
+   STATE
+============================================ */
+let db = { nhanSu: [], danhMuc: [], congTac: {}, tamUng: {}, hoatDong: {} };
+let currentCTId = null;
+let currentCTTab = 'hoat_dong';
+let currentTHTab = 0;
+let openHDs = new Set();
+let nguoiTamCT = [];
+let chiaTargetHdId = null;
+let moKhoaTargetCTId = null;
+
+/* ============================================
+   HELPERS
+============================================ */
+function fmt(n) {
+  if (n === '' || n === null || n === undefined) return '';
+  return Number(n).toLocaleString('vi-VN');
+}
+function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
+function getShortName(full) { const p = full.trim().split(/\s+/); return p[p.length-1]; }
+function isFemale(name) { return name.includes("Thị"); }
+function displayName(full) { return (isFemale(full) ? "Mrs." : "Mr.") + getShortName(full); }
+function getNhanSu(id) { return db.nhanSu.find(n => String(n.id) === String(id)); }
+function getNameByNguoiId(id) { const n = getNhanSu(id); return n ? n.ten : '?'; }
+function displayByNguoiId(id) { const n = getNhanSu(id); return n ? displayName(n.ten) : '?'; }
+function getDanhMuc(id) { return db.danhMuc.find(d => d.id === id); }
+function getTenDanhMuc(id) { const d = getDanhMuc(id); return d ? d.ten : '(không rõ)'; }
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const s = String(iso);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return s;
+}
+function chuyenNgay(str) {
+  if (!str) return '';
+  const s = String(str).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return s;
+}
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function showLoading(on) {
+  document.getElementById('loading').classList.toggle('show', on);
+}
+
+/* ============================================
+   LOAD / SAVE
+============================================ */
+async function loadFromServer(showAlert) {
+  if (!WEB_APP_URL || WEB_APP_URL.includes('DÁN_URL')) {
+    if (showAlert) alert('Chưa cấu hình WEB_APP_URL!');
+    return;
+  }
+  showLoading(true);
+  try {
+    const res = await fetch(WEB_APP_URL + '?action=loadAll');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    db.nhanSu = data.nhanSu || [];
+    db.danhMuc = data.danhMuc || [];
+    db.congTac = data.congTac || {};
+    db.tamUng = data.tamUng || {};
+    db.hoatDong = data.hoatDong || {};
+    renderAll();
+    if (showAlert) toast('✅ Đã tải dữ liệu');
+  } catch (e) {
+    alert('Lỗi tải: ' + e.message);
+  }
+  showLoading(false);
+}
+
+async function saveToServer(showAlert) {
+  if (!WEB_APP_URL || WEB_APP_URL.includes('DÁN_URL')) {
+    if (showAlert) alert('Chưa cấu hình WEB_APP_URL!');
+    return;
+  }
+  showLoading(true);
+  try {
+    const res = await fetch(WEB_APP_URL + '?action=saveAll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(db)
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (showAlert) toast(`✅ Đã lưu (${data.soCongTac} CT, ${data.soHoatDong} HĐ)`);
+  } catch (e) {
+    if (showAlert) alert('Lỗi lưu: ' + e.message);
+  }
+  showLoading(false);
+}
+
+/* ============================================
+   TABS
+============================================ */
+function switchTab(i) {
+  document.querySelectorAll('.tab-btn').forEach((b,k) => b.classList.toggle('active', k===i));
+  document.querySelectorAll('.tab-content').forEach((c,k) => c.classList.toggle('active', k===i));
+  if (i === 1) renderTongHop();
+}
+function switchCTTab(name) {
+  currentCTTab = name;
+  renderChiTietCT();
+}
+function switchTHTab(i) {
+  currentTHTab = i;
+  document.querySelectorAll('#tab1 .subtab-btn').forEach((b,k) => b.classList.toggle('active', k===i));
+  document.querySelectorAll('#tab1 .subtab-content').forEach((c,k) => c.classList.toggle('active', k===i));
+}
+
+/* ============================================
+   RENDER ALL
+============================================ */
+function renderAll() {
+  renderLocThang();
+  renderDsCongTac();
+  renderChipsTaoCT();
+  if (currentCTId) renderChiTietCT();
+  renderDanhMucCauHinh();
+  renderTongHopCheckbox();
+  if (document.querySelector('.tab-content.active').id === 'tab1') renderTongHop();
+}
+
+function renderLocThang() {
+  const sel = document.getElementById('locThang');
+  const cur = sel.value;
+  const months = new Set();
+  Object.values(db.congTac).forEach(ct => {
+    if (ct.tuNgay && /^\d{4}-\d{2}/.test(ct.tuNgay)) months.add(ct.tuNgay.slice(0,7));
+  });
+  const arr = [...months].sort().reverse();
+  sel.innerHTML = '<option value="">-- Tất cả --</option>' +
+    arr.map(m => {
+      const [y,mo] = m.split('-');
+      return `<option value="${m}">Tháng ${mo}/${y}</option>`;
+    }).join('');
+  if (cur) sel.value = cur;
+}
+
+function renderDsCongTac() {
+  const container = document.getElementById('dsCongTac');
+  const filter = document.getElementById('locThang').value;
+  let list = Object.values(db.congTac);
+  if (filter) list = list.filter(ct => ct.tuNgay && ct.tuNgay.startsWith(filter));
+  list.sort((a,b) => (b.tuNgay||'').localeCompare(a.tuNgay||''));
+
+  if (list.length === 0) {
+    container.innerHTML = '<p class="text-muted">Chưa có công tác nào. Bấm "➕ Tạo công tác" để bắt đầu.</p>';
+    return;
+  }
+
+  container.innerHTML = list.map(ct => {
+    const isOpen = ct.id === currentCTId;
+    const isLocked = ct.trangThai === 'da_quyet_toan';
+    return `
+      <div class="folder">
+        <div class="folder-header ${isOpen?'open':''}" onclick="toggleCongTac('${ct.id}')">
+          <span>📁 ${ct.ten} (${fmtDate(ct.tuNgay)} → ${fmtDate(ct.denNgay)}) ${isLocked?'<span class="locked-badge">🔒 Đã khóa</span>':''}</span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="folder-body ${isOpen?'open':''}" id="bodyCT_${ct.id}"></div>
+      </div>
+    `;
+  }).join('');
+
+  if (currentCTId) renderChiTietCT();
+}
+
+function toggleCongTac(id) {
+  if (currentCTId === id) { currentCTId = null; }
+  else { currentCTId = id; currentCTTab = 'hoat_dong'; openHDs = new Set(); }
+  renderDsCongTac();
+}
+
+/* ============================================
+   CHI TIẾT CÔNG TÁC
+============================================ */
+function renderChiTietCT() {
+  if (!currentCTId) return;
+  const ct = db.congTac[currentCTId];
+  if (!ct) return;
+  const body = document.getElementById('bodyCT_' + currentCTId);
+  if (!body) return;
+
+  const isLocked = ct.trangThai === 'da_quyet_toan';
+
+  let html = `
+    <div class="subtabs">
+      <button class="subtab-btn ${currentCTTab==='tam_ung'?'active':''}" onclick="switchCTTab('tam_ung')">💰 Tạm ứng</button>
+      <button class="subtab-btn ${currentCTTab==='hoat_dong'?'active':''}" onclick="switchCTTab('hoat_dong')">📝 Hoạt động</button>
+      <button class="subtab-btn ${currentCTTab==='quyet_toan'?'active':''}" onclick="switchCTTab('quyet_toan')">🔒 Quyết toán</button>
+    </div>
+  `;
+
+  if (currentCTTab === 'tam_ung') html += renderTamUng(ct, isLocked);
+  if (currentCTTab === 'hoat_dong') html += renderHoatDong(ct, isLocked);
+  if (currentCTTab === 'quyet_toan') html += renderQuyetToan(ct, isLocked);
+
+  html += `<div style="margin-top:12px; border-top:1px dashed #ccc; padding-top:10px;">
+    ${!isLocked ? `<button class="btn-sm btn-red" onclick="xoaCongTac('${ct.id}')">🗑️ Xóa công tác</button>` : ''}
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+/* ---------- TẠM ỨNG ---------- */
+function renderTamUng(ct, isLocked) {
+  const list = Object.values(db.tamUng).filter(t => t.congTacId === ct.id);
+  let html = '';
+  if (list.length === 0) {
+    html += '<p class="text-muted">Chưa có tạm ứng.</p>';
+  } else {
+    html += `<div class="scroll-x"><table>
+      <thead><tr><th>STT</th><th>Người</th><th>Số tiền</th><th>Ngày</th><th>Hình thức</th>${!isLocked?'<th></th>':''}</tr></thead><tbody>`;
+    list.forEach((t, i) => {
+      html += `<tr>
+        <td>${i+1}</td>
+        <td>${displayByNguoiId(t.nguoiId)}</td>
+        <td style="text-align:right;">${fmt(t.soTien)}</td>
+        <td>${fmtDate(t.ngay)}</td>
+        <td>${t.hinhThuc==='chuyen_khoan'?'CK':'TM'}</td>
+        ${!isLocked?`<td><button class="btn-sm btn-red" onclick="xoaTamUng('${t.id}')">✖</button></td>`:''}
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+  if (!isLocked) html += `
+    <div style="margin-top:10px; padding:10px; border:1px dashed #007bff; border-radius:6px; background:#f0f8ff;">
+      <h3 style="margin-top:0;">➕ Thêm tạm ứng</h3>
+      <div class="form-group"><label>Người:</label>
+        <select id="tuNguoi">${ct.nguoi.map(nid => `<option value="${nid}">${displayByNguoiId(nid)}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Số tiền:</label>
+        <input type="tel" inputmode="numeric" id="tuSoTien" placeholder="VD: 2000000">
+      </div>
+      <div class="form-group"><label>Ngày:</label>
+        <input type="date" id="tuNgay" value="${today()}">
+      </div>
+      <div class="form-group"><label>Hình thức:</label>
+        <select id="tuHinhThuc">
+          <option value="tien_mat">Tiền mặt</option>
+          <option value="chuyen_khoan">Chuyển khoản</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Ghi chú:</label>
+        <input type="text" id="tuGhiChu" placeholder="(tùy chọn)">
+      </div>
+      <button class="btn-blue" onclick="themTamUng()">✅ Thêm</button>
+    </div>`;
+  return html;
+}
+
+function themTamUng() {
+  const ct = db.congTac[currentCTId];
+  const nguoiId = document.getElementById('tuNguoi').value;
+  const soTien = Number(document.getElementById('tuSoTien').value) || 0;
+  const ngay = document.getElementById('tuNgay').value || today();
+  const hinhThuc = document.getElementById('tuHinhThuc').value;
+  const ghiChu = document.getElementById('tuGhiChu').value.trim();
+  if (!nguoiId) { alert('Chọn người!'); return; }
+  if (soTien <= 0) { alert('Nhập số tiền > 0!'); return; }
+  const id = genId();
+  db.tamUng[id] = { id, congTacId: ct.id, nguoiId, soTien, ngay, hinhThuc, ghiChu };
+  saveToServer(false);
+  renderChiTietCT();
+  toast('✅ Đã thêm tạm ứng');
+}
+
+function xoaTamUng(id) {
+  if (!confirm('Xóa tạm ứng này?')) return;
+  delete db.tamUng[id];
+  saveToServer(false);
+  renderChiTietCT();
+  toast('Đã xóa');
+}
+
+/* ---------- HOẠT ĐỘNG ---------- */
+function renderHoatDong(ct, isLocked) {
+  const list = Object.values(db.hoatDong)
+    .filter(h => h.congTacId === ct.id)
+    .sort((a,b) => (a.ngay||'').localeCompare(b.ngay||''));
+
+  let html = '';
+  if (!isLocked) {
+    html += `<button class="btn-blue btn-sm" onclick="moFormHoatDong()" style="margin-bottom:10px;">➕ Thêm hoạt động</button>`;
+    html += `<div id="formHoatDong" style="display:none; border:1px solid #007bff; border-radius:6px; padding:10px; margin-bottom:10px; background:#f0f8ff;"></div>`;
+  }
+
+  if (list.length === 0) {
+    html += '<p class="text-muted">Chưa có hoạt động nào.</p>';
+    return html;
+  }
+
+  list.forEach(h => {
+    const isOpen = openHDs.has(h.id);
+    let tong = 0;
+    Object.values(h.chiTiet).forEach(v => tong += Number(v) || 0);
+    html += `
+      <div class="hd-item">
+        <div class="hd-header ${isOpen?'open':''}" onclick="toggleHD('${h.id}')">
+          <span><span class="badge badge-chi">CHI</span> ${fmtDate(h.ngay)} - ${h.noiDung}</span>
+          <span><b>${fmt(tong)} đ</b> <span class="arrow">▶</span></span>
+        </div>
+        <div class="hd-body ${isOpen?'open':''}" id="hdBody_${h.id}">
+          ${renderHoatDongBody(h, ct, isLocked)}
+        </div>
+      </div>
+    `;
+  });
+  return html;
+}
+
+function renderHoatDongBody(h, ct, isLocked) {
+  const nguoiIds = Object.keys(h.chiTiet);
+  if (nguoiIds.length === 0) {
+    return isLocked ? '<p class="text-muted">Không có người.</p>' : `
+      <p class="text-muted">Chưa có người. </p>
+      <button class="btn-sm btn-red" onclick="xoaHoatDong('${h.id}')">🗑️ Xóa HĐ</button>`;
+  }
+
+  let html = `<div class="scroll-x"><table>
+    <thead><tr><th>STT</th><th>Tên</th><th>Số tiền</th>${!isLocked?'<th></th>':''}</tr></thead><tbody>`;
+
+  nguoiIds.forEach((nid, i) => {
+    const val = h.chiTiet[nid] || 0;
+    if (!isLocked) {
+      html += `<tr>
+        <td>${i+1}</td>
+        <td>${displayByNguoiId(nid)}</td>
+        <td><input type="tel" inputmode="numeric" class="money-input" value="${val || ''}"
+          oninput="capNhatTienHD('${h.id}','${nid}',this.value)"
+          onblur="chuanHoaTienHD('${h.id}','${nid}',this)"></td>
+        <td><button class="btn-sm btn-red" onclick="xoaNguoiHD('${h.id}','${nid}')">✖</button></td>
+      </tr>`;
+    } else {
+      html += `<tr>
+        <td>${i+1}</td>
+        <td>${displayByNguoiId(nid)}</td>
+        <td style="text-align:right;">${fmt(val)}</td>
+      </tr>`;
+    }
+  });
+  html += `</tbody></table></div>`;
+
+  if (!isLocked) {
+    html += `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+      <button class="btn-sm btn-purple" onclick="moChiaDeu('${h.id}')">⚖️ Chia đều</button>
+      <button class="btn-sm btn-orange" onclick="copyTuNguoiDau('${h.id}')">📋 Copy từ người đầu</button>
+      <button class="btn-sm btn-blue" onclick="moThemNguoiHD('${h.id}')">➕ Thêm người</button>
+      <button class="btn-sm btn-red" onclick="xoaHoatDong('${h.id}')">🗑️ Xóa HĐ</button>
+    </div>
+    <div id="themNguoi_${h.id}" style="display:none; margin-top:8px; padding:8px; border:1px dashed #007bff; border-radius:4px;">
+      <div class="chip-group" id="chipThem_${h.id}"></div>
+      <button class="btn-sm btn-blue" onclick="xacNhanThemNguoi('${h.id}')">Xác nhận</button>
+      <button class="btn-sm btn-gray" onclick="document.getElementById('themNguoi_${h.id}').style.display='none'">Hủy</button>
+    </div>`;
+  }
+  return html;
+}
+
+function toggleHD(id) {
+  if (openHDs.has(id)) openHDs.delete(id); else openHDs.add(id);
+  renderChiTietCT();
+}
+
+function capNhatTienHD(hdId, nguoiId, val) {
+  const h = db.hoatDong[hdId];
+  if (!h) return;
+  const num = val.replace(/[^\d]/g, '');
+  h.chiTiet[nguoiId] = num === '' ? 0 : Number(num);
+  h.ngaySua = today();
+  // Không save mỗi keystroke, chỉ update UI tổng
+  const header = document.querySelector(`#hdBody_${hdId}`)?.parentElement?.querySelector('.hd-header b');
+  if (header) {
+    let tong = 0;
+    Object.values(h.chiTiet).forEach(v => tong += Number(v) || 0);
+    header.innerText = fmt(tong) + ' đ';
+  }
+}
+
+function chuanHoaTienHD(hdId, nguoiId, el) {
+  const h = db.hoatDong[hdId];
+  if (!h) return;
+  const num = Number(el.value.replace(/[^\d]/g, '')) || 0;
+  h.chiTiet[nguoiId] = num;
+  el.value = num || '';
+  saveToServer(false);
+}
+
+function xoaNguoiHD(hdId, nguoiId) {
+  const h = db.hoatDong[hdId];
+  if (!h) return;
+  if (!confirm('Xóa ' + displayByNguoiId(nguoiId) + ' khỏi hoạt động?')) return;
+  delete h.chiTiet[nguoiId];
+  h.ngaySua = today();
+  saveToServer(false);
+  openHDs.add(hdId);
+  renderChiTietCT();
+}
+
+function copyTuNguoiDau(hdId) {
+  const h = db.hoatDong[hdId];
+  if (!h) return;
+  const ids = Object.keys(h.chiTiet);
+  if (ids.length === 0) return;
+  const firstVal = h.chiTiet[ids[0]] || 0;
+  if (firstVal === 0) { alert('Người đầu chưa có số tiền!'); return; }
+  ids.forEach(nid => h.chiTiet[nid] = firstVal);
+  h.ngaySua = today();
+  saveToServer(false);
+  openHDs.add(hdId);
+  renderChiTietCT();
+  toast(`✅ Đã copy ${fmt(firstVal)}đ cho ${ids.length} người`);
+}
+
+function moThemNguoiHD(hdId) {
+  const h = db.hoatDong[hdId];
+  const ct = db.congTac[currentCTId];
+  if (!h || !ct) return;
+  const div = document.getElementById('themNguoi_' + hdId);
+  div.style.display = 'block';
+  const conLai = ct.nguoi.filter(nid => !(nid in h.chiTiet));
+  const chipDiv = document.getElementById('chipThem_' + hdId);
+  if (conLai.length === 0) {
+    chipDiv.innerHTML = '<p class="text-muted">Tất cả đã có trong hoạt động.</p>';
+  } else {
+    chipDiv.innerHTML = conLai.map(nid =>
+      `<div class="chip" data-id="${nid}" onclick="this.classList.toggle('selected')">${displayByNguoiId(nid)}</div>`
+    ).join('');
+  }
+}
+
+function xacNhanThemNguoi(hdId) {
+  const h = db.hoatDong[hdId];
+  if (!h) return;
+  document.querySelectorAll(`#chipThem_${hdId} .chip.selected`).forEach(c => {
+    const nid = c.getAttribute('data-id');
+    if (!(nid in h.chiTiet)) h.chiTiet[nid] = 0;
+  });
+  h.ngaySua = today();
+  saveToServer(false);
+  openHDs.add(hdId);
+  renderChiTietCT();
+  toast('Đã thêm người');
+}
+
+function xoaHoatDong(hdId) {
+  if (!confirm('Xóa hoạt động này?')) return;
+  delete db.hoatDong[hdId];
+  openHDs.delete(hdId);
+  saveToServer(false);
+  renderChiTietCT();
+  toast('Đã xóa hoạt động');
+}
+
+/* ---------- CHIA ĐỀU ---------- */
+function moChiaDeu(hdId) {
+  const h = db.hoatDong[hdId];
+  if (!h) return;
+  const n = Object.keys(h.chiTiet).length;
+  if (n === 0) { alert('Chưa có người để chia!'); return; }
+  chiaTargetHdId = hdId;
+  document.getElementById('chiaSoNguoi').innerText = n;
+  document.getElementById('inputChiaTong').value = '';
+  document.getElementById('modalChia').classList.add('show');
+  setTimeout(() => document.getElementById('inputChiaTong').focus(), 100);
+}
+
+function xacNhanChia() {
+  const tong = Number(document.getElementById('inputChiaTong').value.replace(/[^\d]/g, '')) || 0;
+  if (tong <= 0) { alert('Nhập tổng tiền > 0!'); return; }
+  const h = db.hoatDong[chiaTargetHdId];
+  if (!h) return;
+  const ids = Object.keys(h.chiTiet);
+  const n = ids.length;
+  const moiNguoi = Math.floor(tong / n);
+  const du = tong - moiNguoi * n;
+  ids.forEach((nid, i) => {
+    h.chiTiet[nid] = moiNguoi + (i < du ? 1 : 0);
+  });
+  h.ngaySua = today();
+  saveToServer(false);
+  closeModal('modalChia');
+  openHDs.add(chiaTargetHdId);
+  renderChiTietCT();
+  toast(`⚖️ Đã chia ${fmt(tong)}đ cho ${n} người`);
+}
+
+/* ---------- THÊM HOẠT ĐỘNG ---------- */
+function moFormHoatDong() {
+  const ct = db.congTac[currentCTId];
+  if (!ct) return;
+  const form = document.getElementById('formHoatDong');
+  form.style.display = 'block';
+  form.innerHTML = `
+    <h3 style="margin-top:0;">➕ Thêm hoạt động</h3>
+    <div class="form-group"><label>Ngày:</label>
+      <input type="date" id="hdNgay" value="${today()}">
+    </div>
+    <div class="form-group"><label>Nội dung:</label>
+      <input type="text" id="hdNoiDung" placeholder="VD: Ăn trưa, xăng xe...">
+    </div>
+    <div class="form-group"><label>Danh mục:</label>
+      <select id="hdDanhMuc">
+        ${db.danhMuc.filter(d=>d.active).map(d=>`<option value="${d.id}">${d.ten}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Chọn người tham gia:</label>
+      <div class="chip-group" id="hdNguoiChips"></div>
+      <button class="btn-sm btn-gray" onclick="chonTatCaHD()">Chọn tất cả</button>
+      <button class="btn-sm btn-gray" onclick="boChonHD()">Bỏ chọn</button>
+    </div>
+    <button class="btn-blue" onclick="themHoatDong()">✅ Thêm</button>
+    <button class="btn-gray" onclick="document.getElementById('formHoatDong').style.display='none'">Hủy</button>
+  `;
+  window._hdNguoiTam = [];
+  renderChipsHD();
+}
+
+function renderChipsHD() {
+  const container = document.getElementById('hdNguoiChips');
+  if (!container) return;
+  const ct = db.congTac[currentCTId];
+  if (!ct) return;
+  container.innerHTML = ct.nguoi.map(nid => {
+    const sel = (window._hdNguoiTam || []).includes(nid) ? 'selected' : '';
+    return `<div class="chip ${sel}" onclick="toggleNguoiHD('${nid}')">${displayByNguoiId(nid)}</div>`;
+  }).join('');
+}
+
+function toggleNguoiHD(nid) {
+  if (!window._hdNguoiTam) window._hdNguoiTam = [];
+  const i = window._hdNguoiTam.indexOf(nid);
+  if (i >= 0) window._hdNguoiTam.splice(i, 1); else window._hdNguoiTam.push(nid);
+  renderChipsHD();
+}
+function chonTatCaHD() {
+  const ct = db.congTac[currentCTId];
+  window._hdNguoiTam = [...ct.nguoi];
+  renderChipsHD();
+}
+function boChonHD() { window._hdNguoiTam = []; renderChipsHD(); }
+
+function themHoatDong() {
+  const ct = db.congTac[currentCTId];
+  if (!ct) return;
+  const ngay = document.getElementById('hdNgay').value || today();
+  const noiDung = document.getElementById('hdNoiDung').value.trim();
+  const danhMucId = document.getElementById('hdDanhMuc').value;
+  if (!noiDung) { alert('Nhập nội dung!'); return; }
+  if (!window._hdNguoiTam || window._hdNguoiTam.length === 0) { alert('Chọn ít nhất 1 người!'); return; }
+  const id = genId();
+  const chiTiet = {};
+  window._hdNguoiTam.forEach(nid => chiTiet[nid] = 0);
+  db.hoatDong[id] = {
+    id, congTacId: ct.id, ngay, noiDung, danhMucId, chiTiet,
+    ngayTao: today(), ngaySua: today()
+  };
+  saveToServer(false);
+  openHDs.add(id);
+  renderChiTietCT();
+  toast('✅ Đã thêm hoạt động');
+}
+
+/* ---------- QUYẾT TOÁN ---------- */
+function tinhTong(ctId) {
+  const ct = db.congTac[ctId];
+  if (!ct) return { tamUng: {}, chi: {}, tongTU: 0, tongChi: 0 };
+  const tamUng = {}, chi = {};
+  ct.nguoi.forEach(nid => { tamUng[nid] = 0; chi[nid] = 0; });
+  Object.values(db.tamUng).filter(t => t.congTacId === ctId).forEach(t => {
+    if (!(t.nguoiId in tamUng)) { tamUng[t.nguoiId] = 0; chi[t.nguoiId] = 0; }
+    tamUng[t.nguoiId] += Number(t.soTien) || 0;
+  });
+  Object.values(db.hoatDong).filter(h => h.congTacId === ctId).forEach(h => {
+    Object.entries(h.chiTiet).forEach(([nid, v]) => {
+      if (!(nid in chi)) { tamUng[nid] = 0; chi[nid] = 0; }
+      chi[nid] += Number(v) || 0;
+    });
+  });
+  let tongTU = 0, tongChi = 0;
+  Object.values(tamUng).forEach(v => tongTU += v);
+  Object.values(chi).forEach(v => tongChi += v);
+  return { tamUng, chi, tongTU, tongChi };
+}
+
+function renderQuyetToan(ct, isLocked) {
+  const t = tinhTong(ct.id);
+  const chenhLech = t.tongTU - t.tongChi;
+  const allNguoi = new Set([...Object.keys(t.tamUng), ...Object.keys(t.chi)]);
+  const ids = [...allNguoi];
+
+  let html = `
+    <div class="scroll-x">
+      <table class="summary-table">
+        <thead><tr><th class="name-col">Người</th><th>Tạm ứng</th><th>Đã chi</th><th>Còn lại</th></tr></thead>
+        <tbody>
+  `;
+  ids.forEach(nid => {
+    const tu = t.tamUng[nid] || 0;
+    const ch = t.chi[nid] || 0;
+    const cl = tu - ch;
+    const color = cl > 0 ? '#28a745' : (cl < 0 ? '#dc3545' : '#333');
+    const label = cl > 0 ? 'Hoàn ứng' : (cl < 0 ? 'Chi bù' : 'Khớp');
+    html += `<tr>
+      <td class="name-col">${displayByNguoiId(nid)}</td>
+      <td>${fmt(tu)}</td>
+      <td>${fmt(ch)}</td>
+      <td style="color:${color}; font-weight:bold;">${fmt(cl)} <span style="font-size:10px;">(${label})</span></td>
+    </tr>`;
+  });
+  html += `</tbody>
+      <tfoot>
+        <tr style="background:#fff3cd; font-weight:bold;">
+          <td class="name-col">TỔNG</td>
+          <td>${fmt(t.tongTU)}</td>
+          <td>${fmt(t.tongChi)}</td>
+          <td style="color:${chenhLech>=0?'#28a745':'#dc3545'};">${fmt(chenhLech)}</td>
+        </tr>
+      </tfoot>
+    </table></div>`;
+
+  if (isLocked) {
+    html += `
+      <div style="margin-top:12px; padding:10px; background:#f8d7da; border-radius:6px;">
+        <p style="margin:0; font-size:13px;"><b>🔒 Đã quyết toán ngày ${fmtDate(ct.ngayQuyetToan)}</b></p>
+      </div>
+      <button class="btn-red btn-block" style="margin-top:10px;" onclick="moModalMoKhoa('${ct.id}')">🔓 Mở khóa (Admin)</button>
+    `;
+  } else {
+    html += `
+      <button class="btn-orange btn-block" style="margin-top:12px;" onclick="quyetToan('${ct.id}')">🔒 Quyết toán & Khóa sổ</button>
+      <p class="text-muted">Sau khi quyết toán, công tác sẽ bị khóa. Chỉ admin (ID=${ADMIN_ID}) mới mở lại được.</p>
+    `;
+  }
+  return html;
+}
+
+function quyetToan(ctId) {
+  const t = tinhTong(ctId);
+  const chenh = t.tongTU - t.tongChi;
+  const msg = `XÁC NHẬN QUYẾT TOÁN\n\n` +
+    `Tổng tạm ứng: ${fmt(t.tongTU)} đ\n` +
+    `Tổng chi:     ${fmt(t.tongChi)} đ\n` +
+    `Chênh lệch:   ${fmt(chenh)} đ ${chenh>=0?'(nhân viên hoàn ứng)':'(công ty chi bù)'}\n\n` +
+    `Sau khi quyết toán, công tác sẽ BỊ KHÓA. Tiếp tục?`;
+  if (!confirm(msg)) return;
+  const ct = db.congTac[ctId];
+  ct.trangThai = 'da_quyet_toan';
+  ct.ngayQuyetToan = today();
+  saveToServer(false);
+  renderDsCongTac();
+  toast('🔒 Đã quyết toán và khóa sổ');
+}
+
+function moModalMoKhoa(ctId) {
+  moKhoaTargetCTId = ctId;
+  const sel = document.getElementById('selectNguoiMoKhoa');
+  sel.innerHTML = db.nhanSu.map(n => `<option value="${n.id}">${n.id} - ${n.ten}</option>`).join('');
+  document.getElementById('modalMoKhoa').classList.add('show');
+}
+
+function xacNhanMoKhoa() {
+  const nguoiId = document.getElementById('selectNguoiMoKhoa').value;
+  if (String(nguoiId) !== String(ADMIN_ID)) {
+    alert('❌ Chỉ người có ID=' + ADMIN_ID + ' mới được mở khóa!');
+    return;
+  }
+  const ct = db.congTac[moKhoaTargetCTId];
+  if (!ct) return;
+  ct.trangThai = 'moi_tao';
+  ct.ngayQuyetToan = '';
+  saveToServer(false);
+  closeModal('modalMoKhoa');
+  renderDsCongTac();
+  toast('🔓 Đã mở khóa công tác');
+}
+
+/* ============================================
+   TẠO / XÓA CÔNG TÁC
+============================================ */
+function moFormTaoCT() {
+  document.getElementById('formTaoCT').style.display = 'block';
+  nguoiTamCT = [];
+  renderChipsTaoCT();
+  if (!window._fpCT) {
+    window._fpCT = flatpickr("#ctThoiGian", {
+      mode: "range", dateFormat: "d/m/Y", locale: "vn",
+      onChange: (dates, str) => {
+        if (str.includes(" to ")) {
+          document.getElementById('ctThoiGian').value = str.replace(" to ", " - ");
+        }
+      }
+    });
+  }
+}
+
+function renderChipsTaoCT() {
+  const c = document.getElementById('ctNguoiChips');
+  if (!c) return;
+  c.innerHTML = db.nhanSu.map(n => {
+    const sel = nguoiTamCT.includes(String(n.id)) ? 'selected' : '';
+    return `<div class="chip ${sel}" onclick="toggleNguoiCT('${n.id}')">${displayName(n.ten)}</div>`;
+  }).join('');
+}
+
+function toggleNguoiCT(id) {
+  const i = nguoiTamCT.indexOf(String(id));
+  if (i >= 0) nguoiTamCT.splice(i, 1); else nguoiTamCT.push(String(id));
+  renderChipsTaoCT();
+}
+function chonTatCaNguoi() { nguoiTamCT = db.nhanSu.map(n => String(n.id)); renderChipsTaoCT(); }
+function boChonTatCa() { nguoiTamCT = []; renderChipsTaoCT(); }
+
+function taoCongTac() {
+  const ten = document.getElementById('ctTen').value.trim();
+  const thoiGian = document.getElementById('ctThoiGian').value.trim();
+  if (!ten) { alert('Nhập tên công tác!'); return; }
+  if (!thoiGian) { alert('Chọn thời gian!'); return; }
+  let tuNgay = '', denNgay = '';
+  const parts = thoiGian.split(' - ');
+  if (parts.length === 2) {
+    tuNgay = chuyenNgay(parts[0].trim());
+    denNgay = chuyenNgay(parts[1].trim());
+  } else {
+    tuNgay = chuyenNgay(thoiGian);
+    denNgay = tuNgay;
+  }
+  if (nguoiTamCT.length === 0) { alert('Chọn ít nhất 1 người!'); return; }
+  const id = genId();
+  db.congTac[id] = {
+    id, ten, tuNgay, denNgay, trangThai: 'moi_tao',
+    nguoi: [...nguoiTamCT], ngayTao: today(), ngayQuyetToan: ''
+  };
+  saveToServer(false);
+  document.getElementById('ctTen').value = '';
+  if (window._fpCT) window._fpCT.clear();
+  nguoiTamCT = [];
+  document.getElementById('formTaoCT').style.display = 'none';
+  currentCTId = id;
+  renderLocThang();
+  renderDsCongTac();
+  toast('✅ Đã tạo công tác: ' + ten);
+}
+
+function xoaCongTac(id) {
+  const ct = db.congTac[id];
+  if (!confirm('Xóa công tác "' + ct.ten + '" và toàn bộ dữ liệu bên trong?')) return;
+  // Xóa tạm ứng + hoạt động liên quan
+  Object.values(db.tamUng).filter(t => t.congTacId === id).forEach(t => delete db.tamUng[t.id]);
+  Object.values(db.hoatDong).filter(h => h.congTacId === id).forEach(h => delete db.hoatDong[h.id]);
+  delete db.congTac[id];
+  if (currentCTId === id) currentCTId = null;
+  saveToServer(false);
+  renderLocThang();
+  renderDsCongTac();
+  toast('Đã xóa công tác');
+}
+
+/* ============================================
+   TỔNG HỢP
+============================================ */
+function renderTongHopCheckbox() {
+  const c = document.getElementById('chonCTTongHop');
+  if (!c) return;
+  const list = Object.values(db.congTac);
+  c.innerHTML = `<label class="checkbox-item"><input type="checkbox" value="all" checked onchange="toggleAllCT(this)"> Tất cả</label>` +
+    list.map(ct => `<label class="checkbox-item"><input type="checkbox" value="${ct.id}" checked onchange="renderTongHop()"> ${ct.ten}</label>`).join('');
+}
+
+function toggleAllCT(el) {
+  document.querySelectorAll('#chonCTTongHop input[type="checkbox"]').forEach(cb => {
+    if (cb.value !== 'all') cb.checked = el.checked;
+  });
+  renderTongHop();
+}
+
+function getSelectedCT() {
+  const allCb = document.querySelector('#chonCTTongHop input[value="all"]');
+  if (allCb && allCb.checked) return Object.values(db.congTac);
+  return [...document.querySelectorAll('#chonCTTongHop input[type="checkbox"]:checked')]
+    .filter(cb => cb.value !== 'all')
+    .map(cb => db.congTac[cb.value])
+    .filter(Boolean);
+}
+
+function renderTongHop() {
+  renderBangTheoNguoi();
+  renderBangTheoDanhMuc();
+}
+
+function renderBangTheoNguoi() {
+  const ctList = getSelectedCT();
+  const c = document.getElementById('bangTongHopNguoi');
+  if (ctList.length === 0) { c.innerHTML = '<p class="text-muted">Chưa chọn công tác.</p>'; return; }
+
+  // Tổng hợp
+  const nguoiSet = new Set();
+  const tongTU = {}, tongChi = {};
+  ctList.forEach(ct => ct.nguoi.forEach(nid => nguoiSet.add(nid)));
+  Object.values(db.tamUng).forEach(t => {
+    if (!ctList.find(ct => ct.id === t.congTacId)) return;
+    nguoiSet.add(t.nguoiId);
+    tongTU[t.nguoiId] = (tongTU[t.nguoiId] || 0) + (Number(t.soTien)||0);
+  });
+  Object.values(db.hoatDong).forEach(h => {
+    if (!ctList.find(ct => ct.id === h.congTacId)) return;
+    Object.entries(h.chiTiet).forEach(([nid, v]) => {
+      nguoiSet.add(nid);
+      tongChi[nid] = (tongChi[nid] || 0) + (Number(v)||0);
+    });
+  });
+
+  const ids = [...nguoiSet];
+  let html = `<table class="summary-table"><thead><tr>
+    <th class="name-col">Người</th><th>Tạm ứng</th><th>Đã chi</th><th>Còn lại</th>
+  </tr></thead><tbody>`;
+  let tTU = 0, tChi = 0;
+  ids.forEach(nid => {
+    const tu = tongTU[nid] || 0;
+    const ch = tongChi[nid] || 0;
+    const cl = tu - ch;
+    tTU += tu; tChi += ch;
+    html += `<tr>
+      <td class="name-col">${displayByNguoiId(nid)}</td>
+      <td>${fmt(tu)}</td>
+      <td>${fmt(ch)}</td>
+      <td style="color:${cl>=0?'#28a745':'#dc3545'}; font-weight:bold;">${fmt(cl)}</td>
+    </tr>`;
+  });
+  html += `</tbody><tfoot>
+    <tr style="background:#fff3cd; font-weight:bold;">
+      <td class="name-col">TỔNG</td>
+      <td>${fmt(tTU)}</td><td>${fmt(tChi)}</td>
+      <td>${fmt(tTU - tChi)}</td>
+    </tr>
+  </tfoot></table>`;
+  c.innerHTML = html;
+}
+
+function renderBangTheoDanhMuc() {
+  const ctList = getSelectedCT();
+  const c = document.getElementById('bangTongHopDanhMuc');
+  if (ctList.length === 0) { c.innerHTML = '<p class="text-muted">Chưa chọn công tác.</p>'; return; }
+  const ctIds = new Set(ctList.map(ct => ct.id));
+
+  // Pivot: danh mục × người
+  const dmMap = {};
+  const nguoiSet = new Set();
+  Object.values(db.hoatDong).forEach(h => {
+    if (!ctIds.has(h.congTacId)) return;
+    const dmId = h.danhMucId || 'khac';
+    if (!dmMap[dmId]) dmMap[dmId] = {};
+    Object.entries(h.chiTiet).forEach(([nid, v]) => {
+      nguoiSet.add(nid);
+      dmMap[dmId][nid] = (dmMap[dmId][nid] || 0) + (Number(v)||0);
+    });
+  });
+
+  if (Object.keys(dmMap).length === 0) {
+    c.innerHTML = '<p class="text-muted">Chưa có dữ liệu chi.</p>'; return;
+  }
+  const nguoiIds = [...nguoiSet];
+
+  let html = `<table class="summary-table"><thead><tr>
+    <th class="name-col">Danh mục</th>
+    ${nguoiIds.map(nid => `<th>${displayByNguoiId(nid)}</th>`).join('')}
+    <th>Tổng</th>
+  </tr></thead><tbody>`;
+
+  const tongDm = {};
+  Object.entries(dmMap).forEach(([dmId, map]) => {
+    let tong = 0;
+    let row = `<td class="name-col">${getTenDanhMuc(dmId)}</td>`;
+    nguoiIds.forEach(nid => {
+      const v = map[nid] || 0;
+      tong += v;
+      row += `<td>${v > 0 ? fmt(v) : ''}</td>`;
+    });
+    row += `<td style="font-weight:bold;">${fmt(tong)}</td>`;
+    html += `<tr>${row}</tr>`;
+    tongDm[dmId] = tong;
+  });
+
+  // Tổng theo người
+  let totalRow = `<td class="name-col" style="background:#fff3cd;">TỔNG</td>`;
+  let grandTotal = 0;
+  nguoiIds.forEach(nid => {
+    let sum = 0;
+    Object.values(dmMap).forEach(map => sum += (map[nid] || 0));
+    grandTotal += sum;
+    totalRow += `<td style="background:#fff3cd; font-weight:bold;">${fmt(sum)}</td>`;
+  });
+  totalRow += `<td style="background:#fff3cd; font-weight:bold;">${fmt(grandTotal)}</td>`;
+  html += `<tr>${totalRow}</tr>`;
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+/* ============================================
+   CẤU HÌNH DANH MỤC
+============================================ */
+function renderDanhMucCauHinh() {
+  const c = document.getElementById('dsDanhMuc');
+  if (!c) return;
+  if (db.danhMuc.length === 0) { c.innerHTML = '<p class="text-muted">Chưa có danh mục.</p>'; return; }
+  c.innerHTML = `<div class="scroll-x"><table>
+    <thead><tr><th>STT</th><th style="text-align:left;">Tên</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+    ${db.danhMuc.map((d,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td style="text-align:left;">${d.ten}</td>
+        <td>${d.active ? '✅' : '⏸️'}</td>
+        <td><button class="btn-sm btn-red" onclick="xoaDanhMuc('${d.id}')">✖</button></td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function themDanhMuc() {
+  const ten = document.getElementById('dmTenMoi').value.trim();
+  if (!ten) { alert('Nhập tên danh mục!'); return; }
+  const id = 'dm_' + Date.now();
+  db.danhMuc.push({ id, ten, loai: 'chi', active: true });
+  document.getElementById('dmTenMoi').value = '';
+  saveToServer(false);
+  renderDanhMucCauHinh();
+  toast('✅ Đã thêm danh mục');
+}
+
+function xoaDanhMuc(id) {
+  // Kiểm tra có hoạt động nào dùng không
+  const used = Object.values(db.hoatDong).some(h => h.danhMucId === id);
+  if (used) { alert('Danh mục đang được dùng trong hoạt động. Không thể xóa!'); return; }
+  if (!confirm('Xóa danh mục này?')) return;
+  db.danhMuc = db.danhMuc.filter(d => d.id !== id);
+  saveToServer(false);
+  renderDanhMucCauHinh();
+  toast('Đã xóa danh mục');
+}
+
+/* ============================================
+   XUẤT EXCEL
+============================================ */
+function xuatExcel() {
+  const ctList = getSelectedCT();
+  if (ctList.length === 0) { alert('Chưa chọn công tác!'); return; }
+  const ctIds = new Set(ctList.map(ct => ct.id));
+
+  // Sheet 1: Chi tiết hoạt động
+  const nguoiSet = new Set();
+  ctList.forEach(ct => ct.nguoi.forEach(nid => nguoiSet.add(nid)));
+  Object.values(db.hoatDong).forEach(h => {
+    if (!ctIds.has(h.congTacId)) return;
+    Object.keys(h.chiTiet).forEach(nid => nguoiSet.add(nid));
+  });
+  const nguoiIds = [...nguoiSet];
+
+  const header = ['STT', 'Công tác', 'Ngày', 'Nội dung', 'Danh mục', ...nguoiIds.map(displayByNguoiId), 'Tổng'];
+  const rows = [header];
+
+  const hdArr = Object.values(db.hoatDong).filter(h => ctIds.has(h.congTacId))
+    .sort((a,b) => (a.ngay||'').localeCompare(b.ngay||''));
+  hdArr.forEach((h, i) => {
+    let tong = 0;
+    const row = [i+1, db.congTac[h.congTacId]?.ten || '', fmtDate(h.ngay), h.noiDung, getTenDanhMuc(h.danhMucId)];
+    nguoiIds.forEach(nid => {
+      const v = h.chiTiet[nid] || 0;
+      tong += v;
+      row.push(v || '');
+    });
+    row.push(tong);
+    rows.push(row);
+  });
+
+  // Tổng theo người
+  const tongTU = {}, tongChi = {};
+  Object.values(db.tamUng).forEach(t => {
+    if (!ctIds.has(t.congTacId)) return;
+    tongTU[t.nguoiId] = (tongTU[t.nguoiId]||0) + (Number(t.soTien)||0);
+  });
+  Object.values(db.hoatDong).forEach(h => {
+    if (!ctIds.has(h.congTacId)) return;
+    Object.entries(h.chiTiet).forEach(([nid, v]) => {
+      tongChi[nid] = (tongChi[nid]||0) + (Number(v)||0);
+    });
+  });
+
+  const rowTU = ['','','','','TỔNG TẠM ỨNG'];
+  nguoiIds.forEach(nid => rowTU.push(tongTU[nid] || 0));
+  rowTU.push(Object.values(tongTU).reduce((a,b)=>a+b,0));
+  rows.push(rowTU);
+
+  const rowChi = ['','','','','TỔNG CHI'];
+  nguoiIds.forEach(nid => rowChi.push(tongChi[nid] || 0));
+  rowChi.push(Object.values(tongChi).reduce((a,b)=>a+b,0));
+  rows.push(rowChi);
+
+  const rowCL = ['','','','','CÒN LẠI'];
+  nguoiIds.forEach(nid => rowCL.push((tongTU[nid]||0) - (tongChi[nid]||0)));
+  rowCL.push(Object.values(tongTU).reduce((a,b)=>a+b,0) - Object.values(tongChi).reduce((a,b)=>a+b,0));
+  rows.push(rowCL);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'TongHop');
+  XLSX.writeFile(wb, `CongTac_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* ============================================
+   INIT
+============================================ */
+window.onload = function() {
+  loadFromServer(false);
+};
+</script>
+</body>
+</html>
