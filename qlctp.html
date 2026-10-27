@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Quản Lý Công Tác V2</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- ĐỔI THƯ VIỆN XUẤT EXCEL ĐỂ CÓ BORDER -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -82,8 +84,6 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
 .checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 12px; }
 .checkbox-item input { width: auto; }
 
-.info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 13px; }
-.info-row span:last-child { font-weight: bold; }
 .text-muted { color: #999; font-size: 12px; padding: 8px 0; }
 
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center; padding: 20px; }
@@ -154,20 +154,27 @@ td input { padding: 4px; font-size: 12px; border: 1px solid #ddd; width: 100%; t
     </div>
 
     <div class="subtabs">
-      <button class="subtab-btn active" onclick="switchTHTab(0)">👤 Theo người</button>
+      <button class="subtab-btn" onclick="switchTHTab(0)">👤 Theo người</button>
       <button class="subtab-btn" onclick="switchTHTab(1)">📂 Theo danh mục</button>
+      <button class="subtab-btn active" onclick="switchTHTab(2)">📋 Chi tiết</button>
     </div>
 
-    <div class="subtab-content active" id="thTab0">
+    <div class="subtab-content" id="thTab0">
       <h3>Bảng tổng hợp theo người</h3>
       <div class="scroll-x" id="bangTongHopNguoi"></div>
     </div>
+    
     <div class="subtab-content" id="thTab1">
       <h3>Bảng tổng hợp theo danh mục</h3>
       <div class="scroll-x" id="bangTongHopDanhMuc"></div>
     </div>
 
-    <button class="btn-orange btn-block" style="margin-top:12px;" onclick="xuatExcel()">📥 Xuất Excel</button>
+    <div class="subtab-content active" id="thTab2">
+      <h3>Chi tiết hoạt động</h3>
+      <div class="scroll-x" id="bangChiTietHD"></div>
+    </div>
+
+    <button class="btn-orange btn-block" style="margin-top:12px;" onclick="xuatExcel()">📥 Xuất Excel (Có kẻ bảng)</button>
   </div>
 
   <!-- ============ TAB 2: CẤU HÌNH ============ -->
@@ -234,9 +241,12 @@ function getShortName(full) { const p = full.trim().split(/\s+/); return p[p.len
 function isFemale(name) { return name.includes("Thị"); }
 function displayName(full) { return (isFemale(full) ? "Mrs." : "Mr.") + getShortName(full); }
 function getNhanSu(id) { return db.nhanSu.find(n => String(n.id) === String(id)); }
-function getNameByNguoiId(id) { const n = getNhanSu(id); return n ? n.ten : '?'; }
 function displayByNguoiId(id) { const n = getNhanSu(id); return n ? displayName(n.ten) : '?'; }
-function getTenDanhMuc(id) { const d = db.danhMuc.find(x => x.id === id); return d ? d.ten : '(không rõ)'; }
+function getTenDanhMuc(id) { 
+  if (!id) return 'Chưa phân loại';
+  const d = db.danhMuc.find(x => x.id === id); 
+  return d ? d.ten : '(Không tồn tại)'; 
+}
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function fmtDate(iso) {
   if (!iso) return '';
@@ -251,7 +261,18 @@ function showLoading(on) { document.getElementById('loading').classList.toggle('
 function saveLocal() { localStorage.setItem('db_congtac_v2', JSON.stringify(db)); }
 function loadLocal() {
   const s = localStorage.getItem('db_congtac_v2');
-  if (s) { try { db = JSON.parse(s); renderAll(); } catch(e){} }
+  if (!s) return;
+  try {
+    const data = JSON.parse(s);
+    db = {
+      nhanSu: data.nhanSu || [],
+      danhMuc: data.danhMuc || [],
+      congTac: data.congTac || {},
+      tamUng: data.tamUng || {},
+      hoatDong: data.hoatDong || {}
+    };
+    renderAll();
+  } catch(e){}
 }
 
 /* SERVER */
@@ -962,6 +983,7 @@ function getSelectedCT() {
 function renderTongHop() {
   renderBangTheoNguoi();
   renderBangTheoDanhMuc();
+  renderBangChiTiet();
 }
 
 function renderBangTheoNguoi() {
@@ -991,20 +1013,22 @@ function renderBangTheoNguoi() {
 
   const ids = [...nguoiSet];
   let html = `<table class="summary-table"><thead><tr>
-    <th class="name-col">Người</th><th>Tạm ứng</th><th>Thu</th><th>Chi</th><th>Còn lại</th>
+    <th class="name-col">Người</th><th>Tạm ứng</th><th>Thu</th><th>Chi</th><th>Tồn (Thu-Chi)</th><th>Còn lại</th>
   </tr></thead><tbody>`;
   let tTU = 0, tThu = 0, tChi = 0;
   ids.forEach(nid => {
     const tu = tongTU[nid] || 0;
     const th = tongThu[nid] || 0;
     const ch = tongChi[nid] || 0;
-    const cl = tu + th - ch;
+    const ton = th - ch;
+    const cl = tu + ton;
     tTU += tu; tThu += th; tChi += ch;
     html += `<tr>
       <td class="name-col">${displayByNguoiId(nid)}</td>
       <td>${fmt(tu)}</td>
       <td class="thu">${fmt(th)}</td>
       <td class="chi">${fmt(ch)}</td>
+      <td style="color:${ton>=0?'#28a745':'#dc3545'}; font-weight:bold;">${fmt(ton)}</td>
       <td style="color:${cl>=0?'#28a745':'#dc3545'}; font-weight:bold;">${fmt(cl)}</td>
     </tr>`;
   });
@@ -1012,7 +1036,7 @@ function renderBangTheoNguoi() {
     <tr style="background:#fff3cd; font-weight:bold;">
       <td class="name-col">TỔNG</td>
       <td>${fmt(tTU)}</td><td class="thu">${fmt(tThu)}</td><td class="chi">${fmt(tChi)}</td>
-      <td>${fmt(tTU + tThu - tChi)}</td>
+      <td>${fmt(tThu - tChi)}</td><td>${fmt(tTU + tThu - tChi)}</td>
     </tr>
   </tfoot></table>`;
   c.innerHTML = html;
@@ -1030,7 +1054,7 @@ function renderBangTheoDanhMuc() {
   Object.values(db.hoatDong).forEach(h => {
     if (!ctIds.has(h.congTacId)) return;
     const dmId = h.danhMucId || 'khac';
-    const key = dmId + '_' + h.loai;
+    const key = dmId + '||' + h.loai; // SỬA LỖI: Dùng ký tự '||' thay vì '_'
     if (!dmMap[key]) dmMap[key] = {};
     Object.entries(h.chiTiet).forEach(([nid, v]) => {
       nguoiSet.add(nid);
@@ -1049,10 +1073,13 @@ function renderBangTheoDanhMuc() {
     <th>Tổng</th>
   </tr></thead><tbody>`;
 
-  const tongDm = {};
+  let grandTotalThu = 0;
+  let grandTotalChi = 0;
+  const nguoiThu = {}, nguoiChi = {};
+
   Object.entries(dmMap).forEach(([key, map]) => {
     let tong = 0;
-    const [dmId, loai] = key.split('_');
+    const [dmId, loai] = key.split('||'); // SỬA LỖI: Tách chuỗi bằng '||'
     const badge = loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>';
     let row = `<td class="name-col">${badge} ${getTenDanhMuc(dmId)}</td>`;
     
@@ -1060,22 +1087,123 @@ function renderBangTheoDanhMuc() {
       const v = map[nid] || 0;
       tong += v;
       row += `<td>${v > 0 ? fmt(v) : ''}</td>`;
+      
+      if (loai === 'thu') nguoiThu[nid] = (nguoiThu[nid]||0) + v;
+      else nguoiChi[nid] = (nguoiChi[nid]||0) + v;
     });
     row += `<td style="font-weight:bold;">${fmt(tong)}</td>`;
     html += `<tr>${row}</tr>`;
-    tongDm[key] = tong;
+    
+    if (loai === 'thu') grandTotalThu += tong;
+    else grandTotalChi += tong;
   });
 
-  let totalRow = `<td class="name-col" style="background:#fff3cd;">TỔNG</td>`;
-  let grandTotal = 0;
+  // Dòng Tổng Thu
+  let rowThu = `<td class="name-col" style="color:#28a745; font-weight:bold;">TỔNG THU</td>`;
+  nguoiIds.forEach(nid => rowThu += `<td class="thu">${fmt(nguoiThu[nid] || 0)}</td>`);
+  rowThu += `<td class="thu">${fmt(grandTotalThu)}</td>`;
+  html += `<tr style="background:#d4edda;">${rowThu}</tr>`;
+
+  // Dòng Tổng Chi
+  let rowChi = `<td class="name-col" style="color:#dc3545; font-weight:bold;">TỔNG CHI</td>`;
+  nguoiIds.forEach(nid => rowChi += `<td class="chi">${fmt(nguoiChi[nid] || 0)}</td>`);
+  rowChi += `<td class="chi">${fmt(grandTotalChi)}</td>`;
+  html += `<tr style="background:#f8d7da;">${rowChi}</tr>`;
+
+  // Dòng Tồn (Thu - Chi)
+  let rowTon = `<td class="name-col" style="background:#fff3cd; font-weight:bold;">TỒN (Thu - Chi)</td>`;
+  let grandTon = grandTotalThu - grandTotalChi;
   nguoiIds.forEach(nid => {
-    let sum = 0;
-    Object.values(dmMap).forEach(map => sum += (map[nid] || 0));
-    grandTotal += sum;
-    totalRow += `<td style="background:#fff3cd; font-weight:bold;">${fmt(sum)}</td>`;
+    const ton = (nguoiThu[nid]||0) - (nguoiChi[nid]||0);
+    rowTon += `<td style="background:#fff3cd; font-weight:bold; color:${ton>=0?'#28a745':'#dc3545'};">${fmt(ton)}</td>`;
   });
-  totalRow += `<td style="background:#fff3cd; font-weight:bold;">${fmt(grandTotal)}</td>`;
-  html += `<tr>${totalRow}</tr>`;
+  rowTon += `<td style="background:#fff3cd; font-weight:bold; color:${grandTon>=0?'#28a745':'#dc3545'};">${fmt(grandTon)}</td>`;
+  html += `<tr>${rowTon}</tr>`;
+
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+function renderBangChiTiet() {
+  const ctList = getSelectedCT();
+  const c = document.getElementById('bangChiTietHD');
+  if (ctList.length === 0) { c.innerHTML = '<p class="text-muted">Chưa chọn công tác.</p>'; return; }
+  const ctIds = new Set(ctList.map(ct => ct.id));
+  
+  const nguoiSet = new Set();
+  ctList.forEach(ct => ct.nguoi.forEach(nid => nguoiSet.add(nid)));
+  Object.values(db.hoatDong).forEach(h => {
+    if (!ctIds.has(h.congTacId)) return;
+    Object.keys(h.chiTiet).forEach(nid => nguoiSet.add(nid));
+  });
+  const nguoiIds = [...nguoiSet];
+
+  const hdArr = Object.values(db.hoatDong).filter(h => ctIds.has(h.congTacId))
+    .sort((a,b) => (a.ngay||'').localeCompare(b.ngay||''));
+
+  if (hdArr.length === 0) { c.innerHTML = '<p class="text-muted">Chưa có hoạt động nào.</p>'; return; }
+
+  let html = `<table class="summary-table"><thead><tr>
+    <th>STT</th><th>Công tác</th><th>Ngày</th><th>Danh mục</th><th>Nội dung</th><th>Loại</th>
+    ${nguoiIds.map(nid => `<th>${displayByNguoiId(nid)}</th>`).join('')}
+    <th>Tổng</th>
+  </tr></thead><tbody>`;
+
+  let tongThuAll = 0, tongChiAll = 0;
+  const nguoiThu = {}, nguoiChi = {};
+
+  hdArr.forEach((h, i) => {
+    let tong = 0;
+    const badge = h.loai === 'thu' ? '<span class="badge badge-thu">THU</span>' : '<span class="badge badge-chi">CHI</span>';
+    let row = `<tr>
+      <td>${i+1}</td>
+      <td style="text-align:left;">${db.congTac[h.congTacId]?.ten || ''}</td>
+      <td>${fmtDate(h.ngay)}</td>
+      <td style="text-align:left;">${getTenDanhMuc(h.danhMucId)}</td>
+      <td style="text-align:left;">${h.noiDung}</td>
+      <td>${badge}</td>`;
+    
+    nguoiIds.forEach(nid => {
+      const v = h.chiTiet[nid] || 0;
+      tong += v;
+      const cls = v > 0 ? (h.loai === 'thu' ? 'thu' : 'chi') : '';
+      row += `<td class="${cls}">${v > 0 ? fmt(v) : ''}</td>`;
+      
+      if (h.loai === 'thu') nguoiThu[nid] = (nguoiThu[nid]||0) + v;
+      else nguoiChi[nid] = (nguoiChi[nid]||0) + v;
+    });
+    row += `<td style="font-weight:bold;">${fmt(tong)}</td></tr>`;
+    html += row;
+
+    if (h.loai === 'thu') tongThuAll += tong;
+    else tongChiAll += tong;
+  });
+
+  // Dòng Tổng Thu
+  let rowThu = `<tr style="background:#d4edda; font-weight:bold;">
+    <td colspan="6" style="text-align:right;">TỔNG THU:</td>`;
+  nguoiIds.forEach(nid => rowThu += `<td class="thu">${fmt(nguoiThu[nid] || 0)}</td>`);
+  rowThu += `<td class="thu">${fmt(tongThuAll)}</td></tr>`;
+  html += rowThu;
+
+  // Dòng Tổng Chi
+  let rowChi = `<tr style="background:#f8d7da; font-weight:bold;">
+    <td colspan="6" style="text-align:right;">TỔNG CHI:</td>`;
+  nguoiIds.forEach(nid => rowChi += `<td class="chi">${fmt(nguoiChi[nid] || 0)}</td>`);
+  rowChi += `<td class="chi">${fmt(tongChiAll)}</td></tr>`;
+  html += rowChi;
+
+  // Dòng Tồn
+  let rowTon = `<tr style="background:#fff3cd; font-weight:bold;">
+    <td colspan="6" style="text-align:right;">TỒN (THU - CHI):</td>`;
+  nguoiIds.forEach(nid => {
+    const ton = (nguoiThu[nid]||0) - (nguoiChi[nid]||0);
+    rowTon += `<td style="color:${ton>=0?'#28a745':'#dc3545'};">${fmt(ton)}</td>`;
+  });
+  const tongTon = tongThuAll - tongChiAll;
+  rowTon += `<td style="color:${tongTon>=0?'#28a745':'#dc3545'};">${fmt(tongTon)}</td></tr>`;
+  html += rowTon;
+
   html += '</tbody></table>';
   c.innerHTML = html;
 }
@@ -1119,7 +1247,7 @@ function xoaDanhMuc(id) {
   toast('Đã xóa danh mục');
 }
 
-/* XUẤT EXCEL */
+/* XUẤT EXCEL (CÓ KẺ BẢNG BORDER) */
 function xuatExcel() {
   const ctList = getSelectedCT();
   if (ctList.length === 0) { alert('Chưa chọn công tác!'); return; }
@@ -1133,14 +1261,23 @@ function xuatExcel() {
   });
   const nguoiIds = [...nguoiSet];
 
-  const header = ['STT', 'Công tác', 'Ngày', 'Nội dung', 'Danh mục', 'Loại', ...nguoiIds.map(displayByNguoiId), 'Tổng'];
+  // Đổi cột D: Danh mục, E: Nội dung
+  const header = ['STT', 'Công tác', 'Ngày', 'Danh mục', 'Nội dung', 'Loại', ...nguoiIds.map(displayByNguoiId), 'Tổng'];
   const rows = [header];
 
   const hdArr = Object.values(db.hoatDong).filter(h => ctIds.has(h.congTacId))
     .sort((a,b) => (a.ngay||'').localeCompare(b.ngay||''));
+  
   hdArr.forEach((h, i) => {
     let tong = 0;
-    const row = [i+1, db.congTac[h.congTacId]?.ten || '', fmtDate(h.ngay), h.noiDung, getTenDanhMuc(h.danhMucId), h.loai === 'thu' ? 'THU' : 'CHI'];
+    const row = [
+      i+1, 
+      db.congTac[h.congTacId]?.ten || '', 
+      fmtDate(h.ngay), 
+      getTenDanhMuc(h.danhMucId), 
+      h.noiDung, 
+      h.loai === 'thu' ? 'THU' : 'CHI'
+    ];
     nguoiIds.forEach(nid => {
       const v = h.chiTiet[nid] || 0;
       tong += v;
@@ -1179,12 +1316,56 @@ function xuatExcel() {
   rowChi.push(Object.values(tongChi).reduce((a,b)=>a+b,0));
   rows.push(rowChi);
 
-  const rowCL = ['','','','','','CÒN LẠI'];
-  nguoiIds.forEach(nid => rowCL.push((tongTU[nid]||0) + (tongThu[nid]||0) - (tongChi[nid]||0)));
-  rowCL.push(Object.values(tongTU).reduce((a,b)=>a+b,0) + Object.values(tongThu).reduce((a,b)=>a+b,0) - Object.values(tongChi).reduce((a,b)=>a+b,0));
-  rows.push(rowCL);
+  const rowTon = ['','','','','','TỒN (THU - CHI)'];
+  nguoiIds.forEach(nid => rowTon.push((tongThu[nid]||0) - (tongChi[nid]||0)));
+  rowTon.push(Object.values(tongThu).reduce((a,b)=>a+b,0) - Object.values(tongChi).reduce((a,b)=>a+b,0));
+  rows.push(rowTon);
 
+  const rowConLai = ['','','','','','CÒN LẠI (TƯ + TỒN)'];
+  nguoiIds.forEach(nid => rowConLai.push((tongTU[nid]||0) + (tongThu[nid]||0) - (tongChi[nid]||0)));
+  rowConLai.push(Object.values(tongTU).reduce((a,b)=>a+b,0) + Object.values(tongThu).reduce((a,b)=>a+b,0) - Object.values(tongChi).reduce((a,b)=>a+b,0));
+  rows.push(rowConLai);
+
+  // Tạo worksheet
   const ws = XLSX.utils.aoa_to_sheet(rows);
+  
+  // KẺ BORDER VÀ STYLE
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = { c: C, r: R };
+      const cellRef = XLSX.utils.encode_cell(cellAddress);
+      if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' }; // Đảm bảo ô trống vẫn có border
+      
+      ws[cellRef].s = {
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } }
+        },
+        alignment: { vertical: "center", horizontal: "center", wrapText: true }
+      };
+      
+      // Header bold
+      if (R === 0) {
+        ws[cellRef].s.font = { bold: true };
+        ws[cellRef].s.fill = { fgColor: { rgb: "E9ECEF" } };
+      }
+      
+      // Cột chứa text căn trái
+      if (R > 0 && (C === 1 || C === 3 || C === 4)) {
+        ws[cellRef].s.alignment.horizontal = "left";
+      }
+      
+      // Các dòng tổng hợp cuối bold
+      if (R >= range.e.r - 4) {
+        ws[cellRef].s.font = { bold: true };
+        ws[cellRef].s.fill = { fgColor: { rgb: "FFF3CD" } };
+      }
+    }
+  }
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'TongHop');
   XLSX.writeFile(wb, `CongTac_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1193,9 +1374,7 @@ function xuatExcel() {
 /* INIT */
 window.onload = function() {
   loadLocal();
-  if (!db.nhanSu || db.nhanSu.length === 0) {
-    loadFromServer(false); // Chỉ tải tự động lần đầu khi máy chưa có dữ liệu
-  }
+  loadFromServer(false);
 };
 </script>
 </body>
